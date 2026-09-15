@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import RecipeTest from './Recipes/Recipe.tsx';
 import Test from './Test.tsx';
+import IngredientsList from './Ingredients/IngredientsList.tsx';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Routes>
           <Route path="/test" element={<Test />}></Route>
           <Route path="/recipe" element={<RecipeTest/>}></Route>
+          <Route path="/ingredients" element={<IngredientsList />}></Route>
         </Routes>
       </main>
     </>

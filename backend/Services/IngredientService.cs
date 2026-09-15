@@ -1,6 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+
 public interface IIngredientService
 {
-    // Task<List<Ingredient>> GetAllAsync();
+    Task<List<Ingredient>> GetAllAsync();
     // Task<Ingredient?> GetAsync(int id);
     // Task<Ingredient> CreateAsync(Ingredient ingredient);
     // Task<bool> DeleteAsync(int id);
@@ -13,5 +15,10 @@ public class IngredientService : IIngredientService
     public IngredientService(AppDbContext db) 
     {
         _db = db;
+    }
+
+    public async Task<List<Ingredient>> GetAllAsync()
+    {
+        return await _db.Ingredients.ToListAsync();
     }
 }

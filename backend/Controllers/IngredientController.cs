@@ -10,4 +10,10 @@ public class IngredientController : ControllerBase
     {
         _service = service;
     }
+
+    [HttpGet]
+    public async Task<ActionResult<List<Ingredient>>> GetIngredients()
+    {
+       return Ok(await _service.GetAllAsync());
+    }
 }
