@@ -1,16 +1,42 @@
 @import "tailwindcss";
 
+@theme {
+    --color-primary: #c65d3b; /* Main buttons, links, active status, brand */
+    --color-primary-dark: #a54a2e; /* Hover/pressed state of primary */
+
+    --color-secondary: #7a9471; /* Highlights, tags, small pops, add actions */
+    --color-secondary-dark: #84cc16; /* secondary hover/pressed */
+
+    --color-background: #fbf7f2; /* Page background - off white */
+    --color-surface: #ffffff; /* Cards, table rows, raised areas */
+    --color-border: #eae0d8; /* light-grey dividers */
+
+    --color-header: #2b2422; /* Near-black for header text */
+    --color-body: #6e635c; /* warm grey for body text */
+
+    --color-success: #4a8b5c; /* Success messages */
+    --color-warning: #f59e0b; /* Warning messages */
+    --color-danger: #c0392b; /* Danger messages */
+}
+
 :root {
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+    --sans: system-ui, "Segoe UI", Roboto, sans-serif;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    font: 18px/145% var(--sans);
+    letter-spacing: 0.18px;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    background-color: var(--color-background);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+    @media (max-width: 1024px) {
+        font-size: 16px;
+    }
+}
+
+@layer base {
+    th {
+        text-align: left;
+    }
 }

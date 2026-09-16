@@ -31,6 +31,14 @@ public class RecipeController : ControllerBase
         var created = await _service.CreateAsync(recipe);
         return CreatedAtAction(nameof(GetRecipe), new { id = created.Id }, created);
     }
+    
+    [HttpPut("{id}")]
+    public async Task<ActionResult<Recipe>> Edit(int id, Recipe recipe)
+    {
+        var edited = await _service.EditAsync(id, recipe);
+        if (!edited) return NotFound();
+        return Ok(edited);
+    }
 
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
@@ -40,11 +48,5 @@ public class RecipeController : ControllerBase
         return Ok();
     }
 
-    [HttpPut("{id}")]
-    public async Task<ActionResult<Recipe>> Edit(int id, Recipe recipe)
-    {
-        var edited = await _service.EditAsync(id, recipe);
-        if (!edited) return NotFound();
-        return Ok(edited);
-    }
+    
 }
