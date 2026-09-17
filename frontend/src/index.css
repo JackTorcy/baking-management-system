@@ -1,15 +1,14 @@
 @import "tailwindcss";
 
 @theme {
-    --color-primary: #c65d3b; /* Main buttons, links, active status, brand */
-    --color-primary-dark: #a54a2e; /* Hover/pressed state of primary */
-
-    --color-secondary: #7a9471; /* Highlights, tags, small pops, add actions */
+    --color-primary: #cd7051; /* #c65d3b; Main buttons, links, active status, brand */
+    --color-primary-dark: #bf5636; /* #a54a2e; Hover/pressed state of primary */
+    --color-secondary: #bf5636; /* Highlights, tags, small pops, add actions */
     --color-secondary-dark: #84cc16; /* secondary hover/pressed */
 
     --color-background: #fbf7f2; /* Page background - off white */
     --color-surface: #ffffff; /* Cards, table rows, raised areas */
-    --color-border: #eae0d8; /* light-grey dividers */
+    --color-border: #c4b4a4; /* light-grey dividers */
 
     --color-header: #2b2422; /* Near-black for header text */
     --color-body: #6e635c; /* warm grey for body text */
@@ -27,6 +26,7 @@
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     background-color: var(--color-background);
+    color: var(--color-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 

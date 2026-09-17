@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Trash } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
-import type { ExistingIngredient } from "../Types/Ingredient";
+import type { ExistingIngredient } from "../types/Ingredient";
 
 function IngredientsList() {
     const [ingredients, setIngredients] = useState<ExistingIngredient[]>([]);
