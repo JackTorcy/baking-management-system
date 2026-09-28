@@ -37,7 +37,7 @@ public class IngredientController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<IngredientResponse>> EditIngredient(int id, SaveIngredient dto)
+    public async Task<ActionResult<IngredientResponse>> UpdateIngredient(int id, SaveIngredient dto)
     {
         var ingredient = await _service.UpdateAsync(id, dto);
         if (ingredient == null) return NotFound();

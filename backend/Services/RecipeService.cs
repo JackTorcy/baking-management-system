@@ -8,7 +8,7 @@ public interface IRecipeService
     Task<Recipe?> GetAsync(int id);
     Task<Recipe> CreateAsync(Recipe recipe);
     Task<bool> DeleteAsync(int id);
-    Task<bool> EditAsync(int id, Recipe recipe);
+    Task<bool> UpdateAsync(int id, Recipe recipe);
 }
 
 public class RecipeService : IRecipeService
@@ -45,7 +45,7 @@ public class RecipeService : IRecipeService
         return true;
     }
 
-    public async Task<bool> EditAsync(int id, Recipe recipe)
+    public async Task<bool> UpdateAsync(int id, Recipe recipe)
     {
         var exists = await _db.Recipes.FindAsync(id);
         if (exists is null) return false;

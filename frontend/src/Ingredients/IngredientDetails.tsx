@@ -7,12 +7,13 @@ import {
 } from "../types/Ingredient";
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
+import { ArrowLeft } from "lucide-react";
 
 function IngredientDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
     const isEditing = id !== undefined;
-    const buttonLabel = isEditing ? "Update Ingredient" : "Create Ingredient";
+    const buttonLabel = isEditing ? "Update Ingredient" : "Add Ingredient";
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [loadFailed, setLoadFailed] = useState(false);
@@ -126,91 +127,94 @@ function IngredientDetails() {
 
     return (
         <>
-            <div className="max-w-2xl mx-auto p-6">
-                <Link to="/ingredients">Back to Ingredients</Link>
+            <Link
+                to="/ingredients"
+                className="inline-flex items-center gap-2 w-fit p-2 mb-6"
+            >
+                <ArrowLeft />
+            </Link>
 
-                <div className="grid grid-cols-1 mb-4">
-                    <div>
-                        <label htmlFor="ingredientName" className="block mb-2">
-                            Ingredient name
-                        </label>
-                        <input
-                            id="ingredientName"
-                            type="text"
-                            className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
-                            value={ingredient.name}
-                            onChange={(e) =>
-                                setIngredient((prev) => ({
-                                    ...prev,
-                                    name: e.target.value,
-                                }))
-                            }
-                        />
-                        {errors.name && (
-                            <span className="text-danger text-sm">
-                                {errors.name}
-                            </span>
-                        )}
-                    </div>
+            <div className="grid grid-cols-1 mb-4">
+                <div>
+                    <label htmlFor="ingredientName" className="block mb-2">
+                        Ingredient name
+                    </label>
+                    <input
+                        id="ingredientName"
+                        type="text"
+                        className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
+                        value={ingredient.name}
+                        onChange={(e) =>
+                            setIngredient((prev) => ({
+                                ...prev,
+                                name: e.target.value,
+                            }))
+                        }
+                    />
+                    {errors.name && (
+                        <span className="text-danger text-sm">
+                            {errors.name}
+                        </span>
+                    )}
                 </div>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label htmlFor="ingredientPrice" className="block mb-2">
-                            Ingredient Price (per unit)
-                        </label>
-                        <input
-                            id="ingredientPrice"
-                            type="text"
-                            className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
-                            value={ingredient.price}
-                            onChange={(e) =>
-                                setIngredient((prev) => ({
-                                    ...prev,
-                                    price: e.target.value,
-                                }))
-                            }
-                        />
-                        {errors.price && (
-                            <span className="text-danger text-sm">
-                                {errors.price}
-                            </span>
-                        )}
-                    </div>
-                    <div>
-                        <label className="block mb-2">Unit</label>
-                        <select
-                            value={ingredient.ingredientUnit}
-                            className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
-                            onChange={(e) =>
-                                setIngredient((prev) => ({
-                                    ...prev,
-                                    ingredientUnit: e.target
-                                        .value as IngredientUnit,
-                                }))
-                            }
-                        >
-                            {ingredientUnits.map((unit) => (
-                                <option key={unit} value={unit}>
-                                    {unit}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label htmlFor="ingredientPrice" className="block mb-2">
+                        Ingredient Price (per unit)
+                    </label>
+                    <input
+                        id="ingredientPrice"
+                        type="text"
+                        className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
+                        value={ingredient.price}
+                        onChange={(e) =>
+                            setIngredient((prev) => ({
+                                ...prev,
+                                price: e.target.value,
+                            }))
+                        }
+                    />
+                    {errors.price && (
+                        <span className="text-danger text-sm">
+                            {errors.price}
+                        </span>
+                    )}
                 </div>
-                <div className="flex justify-end">
-                    <button
-                        type="button"
-                        disabled={submitting}
-                        className="border flex min-w-40 min-h-8 items-center justify-center border-border text-header rounded-2xl py-1 px-3 bg-primary hover:bg-primary-dark"
-                        onClick={() => handleSubmit()}
+                <div>
+                    <label className="block mb-2">Unit</label>
+                    <select
+                        value={ingredient.ingredientUnit}
+                        className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
+                        onChange={(e) =>
+                            setIngredient((prev) => ({
+                                ...prev,
+                                ingredientUnit: e.target
+                                    .value as IngredientUnit,
+                            }))
+                        }
                     >
-                        {submitting ? (
-                            <LoadingSpinner className="w-4 h-4" />
-                        ) : (
-                            buttonLabel
-                        )}
-                    </button>
+                        {ingredientUnits.map((unit) => (
+                            <option key={unit} value={unit}>
+                                {unit}
+                            </option>
+                        ))}
+                    </select>
                 </div>
+            </div>
+            <div className="flex justify-end">
+                <button
+                    type="button"
+                    disabled={submitting}
+                    className="border flex min-w-40 min-h-8 items-center justify-center border-border text-header rounded-2xl py-1 px-3 bg-primary hover:bg-primary-dark"
+                    onClick={() => handleSubmit()}
+                >
+                    {submitting ? (
+                        <LoadingSpinner className="w-4 h-4" />
+                    ) : (
+                        buttonLabel
+                    )}
+                </button>
             </div>
         </>
     );
