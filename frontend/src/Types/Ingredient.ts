@@ -1,9 +1,4 @@
-export type IngredientUnit =
-    | "kilogram"
-    | "gram"
-    | "millilitre"
-    | "litre"
-    | "item";
+export type IngredientUnit = "kilogram" | "gram" | "millilitre" | "litre" | "item";
 
 export const ingredientUnits: IngredientUnit[] = [
     "kilogram",

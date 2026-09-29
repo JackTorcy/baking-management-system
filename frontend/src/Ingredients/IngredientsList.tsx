@@ -13,9 +13,7 @@ function IngredientsList() {
     useEffect(() => {
         const loadIngredients = async () => {
             setLoading(true);
-            const res = await fetch(
-                `${import.meta.env.VITE_API_URL}/ingredients`,
-            );
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients`);
             const data = await res.json();
             setIngredients(data);
             setLoading(false);
@@ -25,16 +23,11 @@ function IngredientsList() {
     }, []);
 
     const deleteIngredient = async (id: number) => {
-        const res = await fetch(
-            `${import.meta.env.VITE_API_URL}/ingredients/${id}`,
-            {
-                method: "DELETE",
-            },
-        );
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients/${id}`, {
+            method: "DELETE",
+        });
         if (res.ok) {
-            setIngredients((ingredient) =>
-                ingredient.filter((i) => i.id != id),
-            );
+            setIngredients((ingredient) => ingredient.filter((i) => i.id != id));
         } else {
             console.error("delete failed: ", res.status);
         }
@@ -45,72 +38,72 @@ function IngredientsList() {
     };
 
     return (
-        <div>
-            <div className="text-4xl mb-4 font-semibold">Ingredients</div>
+        <div className="h-full flex flex-col">
+            <div className="shrink-0">
+                <div className="text-4xl mb-4 font-semibold">Ingredients</div>
 
-            <div className="flex justify-between items-center mb-4">
-                <div className="relative w-full max-w-100 mr-10">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                        type="text"
-                        className="border rounded-2xl border-border bg-surface w-full pl-10 pr-3 py-2"
-                        placeholder="Search..."
-                        // value={}
-                        // onChange={(e) =>
-                        //     setIngredient((prev) => ({
-                        //         ...prev,
-                        //         price: e.target.value,
-                        //     }))
-                        //}
-                    />
-                </div>
+                <div className="flex items-center gap-4 mb-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                            type="text"
+                            className="border rounded-2xl border-border bg-surface w-full pl-10 pr-3 py-2"
+                            placeholder="Search..."
+                            // value={}
+                            // onChange={(e) =>
+                            //     setIngredient((prev) => ({
+                            //         ...prev,
+                            //         price: e.target.value,
+                            //     }))
+                            //}
+                        />
+                    </div>
 
-                <Link to="/ingredients/new">
-                    <button
-                        type="button"
-                        className="border flex min-w-50 w-1/3 py-2 min-h-8 items-center justify-center border-border text-header rounded-2xl px-3 bg-primary hover:bg-primary-dark"
-                    >
-                        <Plus />
-                        Add New Ingredient
-                    </button>
-                </Link>
-            </div>
-
-            {loading ? (
-                <div className="flex justify-center py-12">
-                    <LoadingSpinner className="h-12 w-12 border-4 text-primary" />
-                </div>
-            ) : (
-                <div>
-                    {ingredients.map((i) => (
-                        <div
-                            className="w-full mb-4 bg-surface border rounded-2xl p-4 border-border"
-                            key={i.id}
+                    <Link to="/ingredients/new" className="shrink-0">
+                        <button
+                            type="button"
+                            className="flex items-center gap-1 py-2 px-3 border border-border rounded-2xl text-header bg-primary hover:bg-primary-dark"
                         >
-                            <div className="flex justify-between mb-2">
-                                <div>{i.name}</div>
-                                <div className="space-x-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleEdit(i.id)}
-                                    >
-                                        <Pencil></Pencil>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => deleteIngredient(i.id)}
-                                    >
-                                        <Trash></Trash>
-                                    </button>
+                            <Plus className="h-5 w-5" />
+                            <span className="hidden md:inline">Add New Ingredient</span>
+                        </button>
+                    </Link>
+                </div>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+                {loading ? (
+                    <div className="flex justify-center py-12">
+                        <LoadingSpinner className="h-12 w-12 border-4 text-primary" />
+                    </div>
+                ) : (
+                    <div>
+                        {ingredients.map((i) => (
+                            <div
+                                className="w-full mb-4 bg-surface border rounded-2xl p-4 border-border"
+                                key={i.id}
+                            >
+                                <div className="flex justify-between mb-2">
+                                    <div>{i.name}</div>
+                                    <div className="space-x-2">
+                                        <button type="button" onClick={() => handleEdit(i.id)}>
+                                            <Pencil></Pencil>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => deleteIngredient(i.id)}
+                                        >
+                                            <Trash></Trash>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    {i.price} per {i.ingredientUnit}
                                 </div>
                             </div>
-                            <div>
-                                {i.price} per {i.ingredientUnit}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </div>
+                )}
+            </div>
 
             {/* <table className="w-full table-auto">
                 <thead>

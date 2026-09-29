@@ -33,17 +33,11 @@ function IngredientDetails() {
 
         if (!ingredient.price.trim()) {
             newErrors.price = "Price is required";
-        } else if (
-            isNaN(Number(ingredient.price)) ||
-            ingredient.price.endsWith(".")
-        ) {
+        } else if (isNaN(Number(ingredient.price)) || ingredient.price.endsWith(".")) {
             newErrors.price = "Price must be a number";
         } else if (Number(ingredient.price) <= 0) {
             newErrors.price = "Price must be greater than 0";
-        } else if (
-            ingredient.price &&
-            !/^\d*\.?\d{0,8}$/.test(ingredient.price)
-        ) {
+        } else if (ingredient.price && !/^\d*\.?\d{0,8}$/.test(ingredient.price)) {
             newErrors.price = "Price must not have more than 8 decimal places";
         }
 
@@ -57,9 +51,7 @@ function IngredientDetails() {
         const loadIngredient = async () => {
             setLoading(true);
 
-            const res = await fetch(
-                `${import.meta.env.VITE_API_URL}/ingredients/${id}`,
-            );
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients/${id}`);
 
             if (res.ok) {
                 const data: ExistingIngredient = await res.json();
@@ -87,14 +79,11 @@ function IngredientDetails() {
         let res;
 
         if (isEditing) {
-            res = await fetch(
-                `${import.meta.env.VITE_API_URL}/ingredients/${id}`,
-                {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(ingredient),
-                },
-            );
+            res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(ingredient),
+            });
         } else {
             res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients`, {
                 method: "POST",
@@ -107,10 +96,7 @@ function IngredientDetails() {
             const data = await res.json();
             navigate(`/ingredients/${data.id}`);
         } else {
-            console.error(
-                `${isEditing ? "edit" : "create"} failed: `,
-                res.status,
-            );
+            console.error(`${isEditing ? "edit" : "create"} failed: `, res.status);
         }
 
         setSubmitting(false);
@@ -127,10 +113,7 @@ function IngredientDetails() {
 
     return (
         <>
-            <Link
-                to="/ingredients"
-                className="inline-flex items-center gap-2 w-fit p-2 mb-6"
-            >
+            <Link to="/ingredients" className="inline-flex items-center gap-2 w-fit p-2 mb-6">
                 <ArrowLeft />
             </Link>
 
@@ -151,11 +134,7 @@ function IngredientDetails() {
                             }))
                         }
                     />
-                    {errors.name && (
-                        <span className="text-danger text-sm">
-                            {errors.name}
-                        </span>
-                    )}
+                    {errors.name && <span className="text-danger text-sm">{errors.name}</span>}
                 </div>
             </div>
             <div className="grid grid-cols-2 gap-4 mb-4">
@@ -175,11 +154,7 @@ function IngredientDetails() {
                             }))
                         }
                     />
-                    {errors.price && (
-                        <span className="text-danger text-sm">
-                            {errors.price}
-                        </span>
-                    )}
+                    {errors.price && <span className="text-danger text-sm">{errors.price}</span>}
                 </div>
                 <div>
                     <label className="block mb-2">Unit</label>
@@ -189,8 +164,7 @@ function IngredientDetails() {
                         onChange={(e) =>
                             setIngredient((prev) => ({
                                 ...prev,
-                                ingredientUnit: e.target
-                                    .value as IngredientUnit,
+                                ingredientUnit: e.target.value as IngredientUnit,
                             }))
                         }
                     >
@@ -209,11 +183,7 @@ function IngredientDetails() {
                     className="border flex min-w-40 min-h-8 items-center justify-center border-border text-header rounded-2xl py-1 px-3 bg-primary hover:bg-primary-dark"
                     onClick={() => handleSubmit()}
                 >
-                    {submitting ? (
-                        <LoadingSpinner className="w-4 h-4" />
-                    ) : (
-                        buttonLabel
-                    )}
+                    {submitting ? <LoadingSpinner className="w-4 h-4" /> : buttonLabel}
                 </button>
             </div>
         </>
