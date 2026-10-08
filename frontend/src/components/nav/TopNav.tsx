@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { navItems } from "./NavItems";
 
 function TopNav({ className = "" }: { className?: string }) {
@@ -7,14 +7,16 @@ function TopNav({ className = "" }: { className?: string }) {
             {navItems.map((n) => {
                 const Icon = n.icon;
                 return (
-                    <Link
+                    <NavLink
                         key={n.to}
                         to={n.to}
-                        className="flex flex-1 flex-col justify-center items-center gap-1 text-header hover:bg-primary-dark"
+                        className={({ isActive }) =>
+                            `flex flex-1 flex-col justify-center items-center gap-1 text-header ${isActive ? "bg-primary-dark" : ""}`
+                        }
                     >
                         <Icon className="h-8 w-8" />
                         <span className="text-s">{n.label}</span>
-                    </Link>
+                    </NavLink>
                 );
             })}{" "}
         </nav>

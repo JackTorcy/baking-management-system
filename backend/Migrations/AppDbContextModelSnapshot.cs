@@ -50,6 +50,38 @@ namespace api_app.Migrations
                     b.ToTable("Ingredients");
                 });
 
+            modelBuilder.Entity("IngredientIngredientTag", b =>
+                {
+                    b.Property<int>("IngredientTagsId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UsedInIngredientsId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("IngredientTagsId", "UsedInIngredientsId");
+
+                    b.HasIndex("UsedInIngredientsId");
+
+                    b.ToTable("IngredientIngredientTag");
+                });
+
+            modelBuilder.Entity("IngredientTag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("IngredientTag");
+                });
+
             modelBuilder.Entity("Recipe", b =>
                 {
                     b.Property<int>("Id")
@@ -74,6 +106,166 @@ namespace api_app.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Recipes");
+                });
+
+            modelBuilder.Entity("RecipeComponent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ComponentRecipeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ParentRecipeId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComponentRecipeId");
+
+                    b.HasIndex("ParentRecipeId");
+
+                    b.ToTable("RecipeComponent");
+                });
+
+            modelBuilder.Entity("RecipeIngredient", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("IngredientId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IngredientId");
+
+                    b.HasIndex("RecipeId");
+
+                    b.ToTable("RecipeIngredient");
+                });
+
+            modelBuilder.Entity("RecipeRecipeTag", b =>
+                {
+                    b.Property<int>("RecipeTagsId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UsedInRecipesId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("RecipeTagsId", "UsedInRecipesId");
+
+                    b.HasIndex("UsedInRecipesId");
+
+                    b.ToTable("RecipeRecipeTag");
+                });
+
+            modelBuilder.Entity("RecipeTag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RecipeTag");
+                });
+
+            modelBuilder.Entity("IngredientIngredientTag", b =>
+                {
+                    b.HasOne("IngredientTag", null)
+                        .WithMany()
+                        .HasForeignKey("IngredientTagsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Ingredient", null)
+                        .WithMany()
+                        .HasForeignKey("UsedInIngredientsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("RecipeComponent", b =>
+                {
+                    b.HasOne("Recipe", "ComponentRecipe")
+                        .WithMany("UsedIn")
+                        .HasForeignKey("ComponentRecipeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Recipe", "ParentRecipe")
+                        .WithMany("Components")
+                        .HasForeignKey("ParentRecipeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ComponentRecipe");
+
+                    b.Navigation("ParentRecipe");
+                });
+
+            modelBuilder.Entity("RecipeIngredient", b =>
+                {
+                    b.HasOne("Ingredient", "Ingredient")
+                        .WithMany("UsedInRecipes")
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Recipe", "Recipe")
+                        .WithMany("Ingredients")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ingredient");
+
+                    b.Navigation("Recipe");
+                });
+
+            modelBuilder.Entity("RecipeRecipeTag", b =>
+                {
+                    b.HasOne("RecipeTag", null)
+                        .WithMany()
+                        .HasForeignKey("RecipeTagsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Recipe", null)
+                        .WithMany()
+                        .HasForeignKey("UsedInRecipesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Ingredient", b =>
+                {
+                    b.Navigation("UsedInRecipes");
+                });
+
+            modelBuilder.Entity("Recipe", b =>
+                {
+                    b.Navigation("Components");
+
+                    b.Navigation("Ingredients");
+
+                    b.Navigation("UsedIn");
                 });
 #pragma warning restore 612, 618
         }
