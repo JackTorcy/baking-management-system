@@ -13,7 +13,7 @@ function App() {
             <main className="flex-1 overflow-hidden">
                 <section className="max-w-5xl mx-auto px-4 h-full py-6">
                     <Routes>
-                        <Route path="/recipe" element={<RecipeList />}></Route>
+                        <Route path="/recipes" element={<RecipeList />}></Route>
                         <Route path="/ingredients" element={<IngredientsList />}></Route>
                         <Route path="/ingredients/new" element={<IngredientDetails />}></Route>
                         <Route path="/ingredients/:id" element={<IngredientDetails />}></Route>

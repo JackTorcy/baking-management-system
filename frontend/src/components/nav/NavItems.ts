@@ -6,5 +6,5 @@ import { BookBookmark, Carrot } from "lucide-react";
 
 export const navItems = [
     { to: "/ingredients", label: "Ingredients", icon: Carrot },
-    { to: "/recipe", label: "Recipes", icon: BookBookmark },
+    { to: "/recipes", label: "Recipes", icon: BookBookmark },
 ];
