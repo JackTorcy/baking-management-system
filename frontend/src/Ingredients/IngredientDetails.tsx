@@ -8,6 +8,7 @@ import {
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import { ArrowLeft } from "lucide-react";
+import PageTitle from "../components/ui/PageTitle";
 
 function IngredientDetails() {
     const { id } = useParams();
@@ -113,9 +114,16 @@ function IngredientDetails() {
 
     return (
         <>
-            <Link to="/ingredients" className="inline-flex items-center gap-2 w-fit p-2 mb-6">
-                <ArrowLeft />
-            </Link>
+            <div className="flex">
+                <Link
+                    to="/ingredients"
+                    className="inline-flex items-center gap-2 w-fit p-2 mb-6 mr-3"
+                >
+                    <ArrowLeft />
+                </Link>
+
+                <PageTitle title={buttonLabel}></PageTitle>
+            </div>
 
             <div className="grid grid-cols-1 mb-4">
                 <div>

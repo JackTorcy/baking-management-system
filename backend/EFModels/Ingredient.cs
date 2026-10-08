@@ -10,4 +10,6 @@ public class Ingredient
     public IngredientUnit IngredientUnit { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? DeletedAt { get; set; }
+
+    public List<RecipeIngredient> UsedInRecipes { get; set; } = new();
 }

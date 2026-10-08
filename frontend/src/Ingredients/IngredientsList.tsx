@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import type { ExistingIngredient } from "../types/Ingredient";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
+import PageTitle from "../components/ui/PageTitle";
 
 function IngredientsList() {
     const [ingredients, setIngredients] = useState<ExistingIngredient[]>([]);
@@ -40,7 +41,7 @@ function IngredientsList() {
     return (
         <div className="h-full flex flex-col">
             <div className="shrink-0">
-                <div className="text-4xl mb-4 font-semibold">Ingredients</div>
+                <PageTitle title="Ingredients"></PageTitle>
 
                 <div className="flex items-center gap-4 mb-4">
                     <div className="relative flex-1">
@@ -79,65 +80,36 @@ function IngredientsList() {
                     <div>
                         {ingredients.map((i) => (
                             <div
-                                className="w-full mb-4 bg-surface border rounded-2xl p-4 border-border"
+                                className="w-full mb-2 bg-surface border rounded-2xl p-4 border-border"
                                 key={i.id}
                             >
                                 <div className="flex justify-between mb-2">
                                     <div>{i.name}</div>
                                     <div className="space-x-2">
-                                        <button type="button" onClick={() => handleEdit(i.id)}>
-                                            <Pencil></Pencil>
+                                        <button
+                                            type="button"
+                                            className="rounded-full p-2 border border-border bg-gray-50 hover:bg-secondary"
+                                            onClick={() => handleEdit(i.id)}
+                                        >
+                                            <Pencil className="text-header"></Pencil>
                                         </button>
                                         <button
                                             type="button"
+                                            className="rounded-full p-2 border border-border bg-gray-50 hover:bg-danger"
                                             onClick={() => deleteIngredient(i.id)}
                                         >
-                                            <Trash></Trash>
+                                            <Trash className="text-header"></Trash>
                                         </button>
                                     </div>
                                 </div>
                                 <div>
-                                    {i.price} per {i.ingredientUnit}
+                                    £{i.price} per {i.ingredientUnit}
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
             </div>
-
-            {/* <table className="w-full table-auto">
-                <thead>
-                    <tr>
-                        <th className="w-2/5">Name</th>
-                        <th className="w-1/5">Price</th>
-                        <th className="w-1/5">Unit</th>
-                        <th className="w-1/5"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {ingredients.map((i) => (
-                        <tr key={i.id}>
-                            <td>{i.name}</td>
-                            <td>{i.price}</td>
-                            <td>{i.ingredientUnit}</td>
-                            <td className="flex justify-center space-x-5">
-                                <button
-                                    type="button"
-                                    onClick={() => handleEdit(i.id)}
-                                >
-                                    <Pencil></Pencil>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => deleteIngredient(i.id)}
-                                >
-                                    <Trash></Trash>
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table> */}
         </div>
     );
 }

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import type { ExistingRecipe } from "../types/Recipe";
+import PageTitle from "../components/ui/PageTitle";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
+import { Pencil, Trash } from "lucide-react";
 
 function RecipeList() {
     const [recipes, setRecipes] = useState<ExistingRecipe[]>([]);
@@ -42,16 +44,16 @@ function RecipeList() {
     //     }
     // };
 
-    const deleteRecipe = async (id: number) => {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/${id}`, {
-            method: "DELETE",
-        });
-        if (res.ok) {
-            setRecipes((recipes) => recipes.filter((r) => r.id !== id));
-        } else {
-            console.error("delete failed:", res.status);
-        }
-    };
+    // const deleteRecipe = async (id: number) => {
+    //     const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/${id}`, {
+    //         method: "DELETE",
+    //     });
+    //     if (res.ok) {
+    //         setRecipes((recipes) => recipes.filter((r) => r.id !== id));
+    //     } else {
+    //         console.error("delete failed:", res.status);
+    //     }
+    // };
 
     // const handleEdit = async (recipe: ExistingRecipe) => {
     //     const editedRecipe = await updateRecipe(recipe);
@@ -84,17 +86,54 @@ function RecipeList() {
     return (
         <div className="h-full flex flex-col">
             <div className="shrink-0">
-                <h1>Recipes stuff</h1>
+                <PageTitle title="Recipes"></PageTitle>
             </div>
 
             <div className="flex-1 overflow-y-auto">
-                <ul>
+                {loading ? (
+                    <div className="flex justify-center py-12">
+                        <LoadingSpinner className="h-12 w-12 border-4 text-primary" />
+                    </div>
+                ) : (
+                    <div>
+                        {recipes.map((r) => (
+                            <div
+                                className="w-full mb-2 bg-surface border rounded-2xl p-4 border-border"
+                                key={r.id}
+                            >
+                                <div className="flex justify-between mb-2">
+                                    <div>{r.name}</div>
+                                    <div className="space-x-2">
+                                        <button
+                                            type="button"
+                                            className="rounded-full p-2 border border-border bg-gray-50 hover:bg-secondary"
+                                            // onClick={() => handleEdit(r.id)}
+                                        >
+                                            <Pencil className="text-header"></Pencil>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="rounded-full p-2 border border-border bg-gray-50 hover:bg-danger"
+                                            // onClick={() => deleteIngredient(r.id)}
+                                        >
+                                            <Trash className="text-header"></Trash>
+                                        </button>
+                                    </div>
+                                </div>
+                                {/* <div>
+                                    £{r.price} per {r.ingredientUnit}
+                                </div> */}
+                            </div>
+                        ))}
+                    </div>
+                )}
+                {/* <ul>
                     {recipes.map((r) => (
                         <li key={r.id}>
                             {r.name}: {r.price}
                             <button type="button">
                                 {" "}
-                                {/*onClick={() => handleEdit(r)}*/}
+                                onClick={() => handleEdit(r)}
                                 Edit
                             </button>
                             <button type="button" onClick={() => deleteRecipe(r.id)}>
@@ -105,10 +144,9 @@ function RecipeList() {
                 </ul>
                 <button type="button">
                     {" "}
-                    {/* onClick={() => handleCreate()} */}
+                    onClick={() => handleCreate()}
                     Add Recipe
-                </button>
-                <Link to="/test">Go to Test</Link>
+                </button> */}
             </div>
         </div>
     );

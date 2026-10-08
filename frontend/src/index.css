@@ -15,7 +15,7 @@
 
     --color-success: #4a8b5c; /* Success messages */
     --color-warning: #f59e0b; /* Warning messages */
-    --color-danger: #c0392b; /* Danger messages */
+    --color-danger: #e01e0f; /*#e3170a;*/ /*#c0392b;*/ /* Danger messages */
 }
 
 :root {
