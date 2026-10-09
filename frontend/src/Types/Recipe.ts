@@ -1,7 +1,7 @@
 export interface NewRecipe {
     name: string;
-    description?: string;
-    price: number;
+    price: string;
+    description: string;
 }
 
 export interface ExistingRecipe extends NewRecipe {

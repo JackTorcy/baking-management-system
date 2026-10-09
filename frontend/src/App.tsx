@@ -4,6 +4,7 @@ import IngredientsList from "./ingredients/IngredientsList.tsx";
 import IngredientDetails from "./ingredients/IngredientDetails.tsx";
 import TopNav from "./components/nav/TopNav.tsx";
 import BottomNav from "./components/nav/BottomNav.tsx";
+import RecipeDetails from "./recipes/RecipeDetails.tsx";
 
 function App() {
     return (
@@ -14,6 +15,9 @@ function App() {
                 <section className="max-w-5xl mx-auto px-4 h-full py-6">
                     <Routes>
                         <Route path="/recipes" element={<RecipeList />}></Route>
+                        <Route path="/recipes/new" element={<RecipeDetails />}></Route>
+                        <Route path="/recipes/:id" element={<RecipeDetails />}></Route>
+
                         <Route path="/ingredients" element={<IngredientsList />}></Route>
                         <Route path="/ingredients/new" element={<IngredientDetails />}></Route>
                         <Route path="/ingredients/:id" element={<IngredientDetails />}></Route>

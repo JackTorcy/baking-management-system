@@ -1,14 +1,12 @@
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Routing.Tree;
 using Microsoft.EntityFrameworkCore;
 
 public interface IRecipeService
 {
-    Task<List<Recipe>> GetAllAsync();
-    Task<Recipe?> GetAsync(int id);
-    Task<Recipe> CreateAsync(Recipe recipe);
+    Task<List<RecipeResponse>> GetAllAsync();
+    Task<RecipeResponse?> GetAsync(int id);
+    Task<RecipeResponse> CreateAsync(SaveRecipe dto);
     Task<bool> DeleteAsync(int id);
-    Task<bool> UpdateAsync(int id, Recipe recipe);
+    Task<RecipeResponse?> UpdateAsync(int id, SaveRecipe dto);
 }
 
 public class RecipeService : IRecipeService
@@ -19,42 +17,63 @@ public class RecipeService : IRecipeService
         _db = db;
     }
 
-    public async Task<List<Recipe>> GetAllAsync()
+    public async Task<List<RecipeResponse>> GetAllAsync()
     {
-        return await _db.Recipes.ToListAsync();
+        var recipes = await _db.Recipes.ToListAsync();
+        return recipes.Select(ToResponse).ToList();
     }
 
-    public async Task<Recipe?> GetAsync(int id)
+    public async Task<RecipeResponse?> GetAsync(int id)
     {
-        return await _db.Recipes.FindAsync(id);
+        var recipe = await _db.Recipes.FindAsync(id);
+        if (recipe == null) return null;
+
+        return ToResponse(recipe);
     }
 
-    public async Task<Recipe> CreateAsync(Recipe recipe)
+    public async Task<RecipeResponse> CreateAsync(SaveRecipe dto)
     {
+        Recipe recipe = new Recipe
+        {
+            Name = dto.Name,
+            Price = decimal.Parse(dto.Price),
+            Description = dto.Description
+        };
+
         _db.Recipes.Add(recipe);
         await _db.SaveChangesAsync();
-        return recipe;
+        return ToResponse(recipe);
+    }
+
+    public async Task<RecipeResponse?> UpdateAsync(int id, SaveRecipe dto)
+    {
+        var recipe = await _db.Recipes.FindAsync(id);
+        if (recipe == null) return null;
+
+        recipe.Name = dto.Name;
+        recipe.Price = decimal.Parse(dto.Price);
+        recipe.Description = dto.Description;
+
+        await _db.SaveChangesAsync();
+        return ToResponse(recipe);
     }
 
     public async Task<bool> DeleteAsync(int id)
     {
         var recipe = await _db.Recipes.FindAsync(id);
         if (recipe == null) return false;
-        _db.Recipes.Remove(recipe);
+
+        recipe.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+
         return true;
     }
 
-    public async Task<bool> UpdateAsync(int id, Recipe recipe)
+    private static RecipeResponse ToResponse(Recipe r) => new()
     {
-        var exists = await _db.Recipes.FindAsync(id);
-        if (exists is null) return false;
-
-        exists.Name = recipe.Name;
-        exists.Description = recipe.Description;
-        exists.Price = recipe.Price;
-
-        await _db.SaveChangesAsync();
-        return true;
-    }
+        Id = r.Id,
+        Name = r.Name,
+        Price = r.Price.ToString("0.##"),        
+        Description = r.Description
+    };
 }

@@ -3,11 +3,12 @@ import type { ExistingRecipe } from "../types/Recipe";
 import PageTitle from "../components/ui/PageTitle";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import { Pencil, Plus, Search, Trash } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function RecipeList() {
     const [recipes, setRecipes] = useState<ExistingRecipe[]>([]);
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const loadRecipes = async () => {
@@ -21,66 +22,20 @@ function RecipeList() {
         loadRecipes();
     }, []);
 
-    // const handleCreate = async () => {
-    //     try {
-    //         const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`, {
-    //             method: "POST",
-    //             headers: { "Content-Type": "application/json" },
-    //             body: JSON.stringify(newRecipe),
-    //         });
+    const deleteRecipe = async (id: number) => {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/${id}`, {
+            method: "DELETE",
+        });
+        if (res.ok) {
+            setRecipes((recipe) => recipe.filter((r) => r.id != id));
+        } else {
+            console.error("delete failed: ", res.status);
+        }
+    };
 
-    //         console.log("status:", res.status); // did it reach the server?
-    //         if (!res.ok) {
-    //             const text = await res.text();
-    //             console.error("failed:", res.status, text); // what did the server say?
-    //             return;
-    //         } else {
-    //             await loadRecipes();
-    //         }
-
-    //         const created = await res.json();
-    //         console.log("created:", created);
-    //     } catch (err) {
-    //         console.error("fetch threw:", err); // network/CORS-level failure
-    //     }
-    // };
-
-    // const deleteRecipe = async (id: number) => {
-    //     const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/${id}`, {
-    //         method: "DELETE",
-    //     });
-    //     if (res.ok) {
-    //         setRecipes((recipes) => recipes.filter((r) => r.id !== id));
-    //     } else {
-    //         console.error("delete failed:", res.status);
-    //     }
-    // };
-
-    // const handleEdit = async (recipe: ExistingRecipe) => {
-    //     const editedRecipe = await updateRecipe(recipe);
-
-    //     try {
-    //         const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/${recipe.id}`, {
-    //             method: "PUT",
-    //             headers: { "Content-Type": "application/json" },
-    //             body: JSON.stringify(editedRecipe),
-    //         });
-
-    //         console.log("status:", res.status); // did it reach the server?
-    //         if (!res.ok) {
-    //             const text = await res.text();
-    //             console.error("failed:", res.status, text); // what did the server say?
-    //             return;
-    //         } else {
-    //             await loadRecipes();
-    //         }
-
-    //         const edited = await res.json();
-    //         console.log("created:", edited);
-    //     } catch (err) {
-    //         console.error("edit threw:", err);
-    //     }
-    // };
+    const handleEdit = (id: number) => {
+        navigate(`/recipes/${id}`);
+    };
 
     return (
         <div className="h-full flex flex-col">
@@ -104,7 +59,7 @@ function RecipeList() {
                         />
                     </div>
 
-                    <Link to="/recipes" className="shrink-0">
+                    <Link to="/recipes/new" className="shrink-0">
                         <button
                             type="button"
                             className="flex items-center gap-1 py-2 px-3 border border-border rounded-2xl text-header bg-primary hover:bg-primary-dark"
@@ -134,14 +89,14 @@ function RecipeList() {
                                         <button
                                             type="button"
                                             className="rounded-full p-2 border border-border bg-gray-50 hover:bg-secondary"
-                                            // onClick={() => handleEdit(r.id)}
+                                            onClick={() => handleEdit(r.id)}
                                         >
                                             <Pencil className="text-header"></Pencil>
                                         </button>
                                         <button
                                             type="button"
                                             className="rounded-full p-2 border border-border bg-gray-50 hover:bg-danger"
-                                            // onClick={() => deleteIngredient(r.id)}
+                                            onClick={() => deleteRecipe(r.id)}
                                         >
                                             <Trash className="text-header"></Trash>
                                         </button>

@@ -6,7 +6,7 @@ public interface IIngredientService
     Task<IngredientResponse?> GetAsync(int id);
     Task<IngredientResponse> CreateAsync(SaveIngredient dto);
     Task<bool> DeleteAsync(int id);
-    Task<IngredientResponse?> UpdateAsync(int id, SaveIngredient ingredient);
+    Task<IngredientResponse?> UpdateAsync(int id, SaveIngredient dto);
 }
 
 public class IngredientService : IIngredientService
