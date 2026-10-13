@@ -79,7 +79,7 @@ namespace api_app.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("IngredientTag");
+                    b.ToTable("IngredientTags");
                 });
 
             modelBuilder.Entity("Recipe", b =>
@@ -132,7 +132,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("ParentRecipeId");
 
-                    b.ToTable("RecipeComponent");
+                    b.ToTable("RecipeComponents");
                 });
 
             modelBuilder.Entity("RecipeIngredient", b =>
@@ -155,7 +155,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("RecipeId");
 
-                    b.ToTable("RecipeIngredient");
+                    b.ToTable("RecipeIngredients");
                 });
 
             modelBuilder.Entity("RecipeRecipeTag", b =>
@@ -187,7 +187,7 @@ namespace api_app.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RecipeTag");
+                    b.ToTable("RecipeTags");
                 });
 
             modelBuilder.Entity("IngredientIngredientTag", b =>

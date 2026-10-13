@@ -95,7 +95,8 @@ function IngredientsList() {
                                         </button>
                                         <button
                                             type="button"
-                                            className="rounded-full p-2 border border-border bg-gray-50 hover:bg-danger"
+                                            className="rounded-full p-2 border border-border bg-gray-50 hover:bg-danger disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-50"
+                                            disabled={i.isUsedInRecipe}
                                             onClick={() => deleteIngredient(i.id)}
                                         >
                                             <Trash className="text-header"></Trash>

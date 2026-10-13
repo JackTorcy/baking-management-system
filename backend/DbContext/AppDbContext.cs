@@ -5,6 +5,13 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base (options) { }
 
+    public DbSet<Ingredient> Ingredients => Set<Ingredient>();
+    public DbSet<IngredientTag> IngredientTags => Set<IngredientTag>();
+    public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
+    public DbSet<Recipe> Recipes => Set<Recipe>();
+    public DbSet<RecipeTag> RecipeTags => Set<RecipeTag>();
+    public DbSet<RecipeComponent> RecipeComponents => Set<RecipeComponent>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Ingredient>()
@@ -33,8 +40,5 @@ public class AppDbContext : DbContext
             .HasOne(ri => ri.Ingredient)
             .WithMany(i => i.UsedInRecipes)
             .HasForeignKey(ri => ri.IngredientId);
-            }
-
-    public DbSet<Recipe> Recipes => Set<Recipe>();
-    public DbSet<Ingredient> Ingredients => Set<Ingredient>();
+    }
 }

@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
     ingredientUnits,
     type ExistingIngredient,
@@ -7,8 +7,7 @@ import {
 } from "../types/Ingredient";
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
-import { ArrowLeft } from "lucide-react";
-import PageTitle from "../components/ui/PageTitle";
+import PageTitleWithBack from "../components/ui/PageTitleWithBack";
 
 function IngredientDetails() {
     const { id } = useParams();
@@ -114,16 +113,7 @@ function IngredientDetails() {
 
     return (
         <>
-            <div className="flex">
-                <Link
-                    to="/ingredients"
-                    className="inline-flex items-center gap-2 w-fit p-2 mb-6 mr-3"
-                >
-                    <ArrowLeft />
-                </Link>
-
-                <PageTitle title={buttonLabel}></PageTitle>
-            </div>
+            <PageTitleWithBack title={buttonLabel} backPath="/ingredients"></PageTitleWithBack>
 
             <div className="grid grid-cols-1 mb-4">
                 <div>

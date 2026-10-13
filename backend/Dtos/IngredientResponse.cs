@@ -4,4 +4,5 @@ public class IngredientResponse
     public string Name { get; set; } = "";
     public string Price { get; set; } = "";
     public IngredientUnit IngredientUnit { get; set; }
+    public bool isUsedInRecipe {get; set;}
 }
