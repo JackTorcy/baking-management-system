@@ -146,6 +146,9 @@ namespace api_app.Migrations
                     b.Property<int>("IngredientId")
                         .HasColumnType("integer");
 
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric");
+
                     b.Property<int>("RecipeId")
                         .HasColumnType("integer");
 

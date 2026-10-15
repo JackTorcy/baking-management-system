@@ -8,6 +8,14 @@ export const ingredientUnits: IngredientUnit[] = [
     "item",
 ];
 
+export const unitLabel: Record<string, string> = {
+    kilogram: "kg",
+    gram: "g",
+    millilitre: "ml",
+    litre: "l",
+    item: "",
+};
+
 export interface NewIngredient {
     name: string;
     price: string;

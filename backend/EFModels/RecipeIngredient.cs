@@ -5,5 +5,5 @@ public class RecipeIngredient
     public Recipe Recipe { get; set; } = null!;
     public int IngredientId { get; set; }
     public Ingredient Ingredient { get; set; } = null!;
-    //Not sure whether quantity/unit is needed
+    public decimal Quantity { get; set; }
 }
