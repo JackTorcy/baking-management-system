@@ -1,10 +1,12 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext<AppUser>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options) { }
 
+    public DbSet<Bakery> Bakeries => Set<Bakery>();
     public DbSet<Ingredient> Ingredients => Set<Ingredient>();
     public DbSet<IngredientTag> IngredientTags => Set<IngredientTag>();
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
@@ -14,6 +16,16 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        //Must be first line.
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder
+            .Entity<AppUser>()
+            .HasOne(u => u.Bakery)
+            .WithMany(b => b.Users)
+            .HasForeignKey(u => u.BakeryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         modelBuilder.Entity<Ingredient>().HasQueryFilter(i => i.DeletedAt == null);
 
         modelBuilder.Entity<Recipe>().HasQueryFilter(r => r.DeletedAt == null);
