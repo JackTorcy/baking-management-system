@@ -14,7 +14,7 @@ function AppLayout() {
             <TopNav className="hidden md:flex h-20 shrink-0 bg-primary" />
 
             <main className="flex-1 overflow-hidden">
-                <section className="max-w-5xl mx-auto px-4 h=full py-6">
+                <section className="max-w-5xl mx-auto px-4 h-full py-6">
                     <Outlet />
                 </section>
             </main>
