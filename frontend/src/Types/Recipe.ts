@@ -12,5 +12,5 @@ export interface ExistingRecipe extends NewRecipe {
 
 export interface RecipeIngredient {
     ingredientId: number;
-    quantity: number;
+    quantity: string;
 }

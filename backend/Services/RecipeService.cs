@@ -28,7 +28,7 @@ public class RecipeService : IRecipeService
     public async Task<RecipeResponse?> GetAsync(int id)
     {
         var recipe = await _db
-            .Recipes.Include(r => r.Ingredients)
+            .Recipes.Include(r => r.Ingredients.OrderBy(ri => ri.Id))
             .FirstOrDefaultAsync(r => r.Id == id);
 
         if (recipe == null)

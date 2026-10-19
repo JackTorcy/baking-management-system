@@ -12,7 +12,7 @@ export const unitLabel: Record<string, string> = {
     kilogram: "kg",
     gram: "g",
     millilitre: "ml",
-    litre: "l",
+    litre: "L",
     item: "",
 };
 

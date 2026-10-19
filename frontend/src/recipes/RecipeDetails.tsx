@@ -24,6 +24,11 @@ function RecipeDetails() {
     const [recipeSnapshot, setRecipeSnapshot] = useState<NewRecipe>(recipe);
     const [allIngredients, setAllIngredients] = useState<ExistingIngredient[]>([]);
 
+    const ingredientCost = recipe.ingredients.reduce((total, ri) => {
+        const ingredient = allIngredients.find((i) => i.id === ri.ingredientId);
+        return total + Number(ri.quantity) * Number(ingredient?.price ?? 0);
+    }, 0);
+
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
@@ -47,7 +52,10 @@ function RecipeDetails() {
                     name: data.name,
                     price: data.price,
                     description: data.description,
-                    ingredients: data.ingredients,
+                    ingredients: data.ingredients.map((ri) => ({
+                        ...ri,
+                        quantity: String(ri.quantity),
+                    })),
                 });
             } else {
                 setLoadFailed(true);
@@ -75,13 +83,25 @@ function RecipeDetails() {
             res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(recipe),
+                body: JSON.stringify({
+                    ...recipe,
+                    ingredients: recipe.ingredients.map((ri) => ({
+                        ...ri,
+                        quantity: Number(ri.quantity),
+                    })),
+                }),
             });
         } else {
             res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(recipe),
+                body: JSON.stringify({
+                    ...recipe,
+                    ingredients: recipe.ingredients.map((ri) => ({
+                        ...ri,
+                        quantity: Number(ri.quantity),
+                    })),
+                }),
             });
         }
 
@@ -100,8 +120,24 @@ function RecipeDetails() {
         if (recipe.ingredients.some((ri) => ri.ingredientId === id)) return;
         setRecipe({
             ...recipe,
-            ingredients: [...recipe.ingredients, { ingredientId: id, quantity: 0 }],
+            ingredients: [...recipe.ingredients, { ingredientId: id, quantity: "" }],
         });
+    };
+
+    const removeIngredientFromRecipe = (id: number) => {
+        setRecipe((prev) => ({
+            ...prev,
+            ingredients: prev.ingredients.filter((ri) => ri.ingredientId !== id),
+        }));
+    };
+
+    const updateIngredientQuantity = (id: number, quantity: string) => {
+        setRecipe((prev) => ({
+            ...prev,
+            ingredients: prev.ingredients.map((ri) =>
+                ri.ingredientId === id ? { ...ri, quantity } : ri,
+            ),
+        }));
     };
 
     const switchEditMode = () => {
@@ -198,6 +234,16 @@ function RecipeDetails() {
                 </div>
 
                 <div className="flex mb-3 gap-3 items-center">
+                    <span>Ingredient cost:</span>
+                    <div>
+                        {ingredientCost.toLocaleString("en-GB", {
+                            style: "currency",
+                            currency: "GBP",
+                        })}
+                    </div>
+                </div>
+
+                <div className="flex mb-3 gap-3 items-center">
                     <label htmlFor="description">Description:</label>
                     {editMode ? (
                         <input
@@ -236,16 +282,71 @@ function RecipeDetails() {
                 <SubTitle title="Ingredients"></SubTitle>
                 <div className="flex-1 overflow-y-auto">
                     {recipe.ingredients.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 gap-x-4 mb-3">
                             {recipe.ingredients.map((ri) => {
                                 const ingredient = allIngredients.find(
                                     (i) => i.id === ri.ingredientId,
                                 );
                                 return (
-                                    <div key={ri.ingredientId}>
-                                        {ingredient?.name}: {ri.quantity}
-                                        {unitLabel[ingredient?.ingredientUnit ?? ""] ??
-                                            ingredient?.ingredientUnit}
+                                    <div key={ri.ingredientId} className="flex items-center gap-2">
+                                        {editMode ? (
+                                            // <span>
+                                            //     <input
+                                            //         onChange={(e) =>
+                                            //             updateIngredientQuantity(
+                                            //                 Number(ri.ingredientId),
+                                            //                 Number(e.target.value),
+                                            //             )
+                                            //         }
+                                            //         className="border border-border rounded-2xl w-14 px-2"
+                                            //         value={ri.quantity}
+                                            //     />
+                                            //     &nbsp;
+                                            //     {unitLabel[ingredient?.ingredientUnit ?? ""] ??
+                                            //         ingredient?.ingredientUnit}
+                                            // </span>
+                                            <label className="flex w-20 shrink-0 items-center rounded-lg border border-border/70 bg-background px-2 py-0.5 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+                                                <input
+                                                    inputMode="decimal"
+                                                    aria-label={`Quantity of ${ingredient?.name}`}
+                                                    className="w-full min-w-0 bg-transparent text-right tabular-nums text-header outline-none"
+                                                    value={ri.quantity}
+                                                    onChange={(e) => {
+                                                        if (/^\d*\.?\d*$/.test(e.target.value))
+                                                            updateIngredientQuantity(
+                                                                ri.ingredientId,
+                                                                e.target.value,
+                                                            );
+                                                    }}
+                                                />
+                                                <span className="ml-1 text-sm text-body/70">
+                                                    {unitLabel[ingredient?.ingredientUnit ?? ""] ??
+                                                        ingredient?.ingredientUnit}
+                                                </span>
+                                            </label>
+                                        ) : (
+                                            <span className="w-14 shrink-0 text-right tabular-nums font-medium text-header">
+                                                {ri.quantity}
+                                                {unitLabel[ingredient?.ingredientUnit ?? ""] ??
+                                                    ingredient?.ingredientUnit}
+                                            </span>
+                                        )}
+
+                                        <span className="truncate flex-1 min-w-0">
+                                            {ingredient?.name}
+                                        </span>
+                                        {editMode && (
+                                            <button
+                                                type="button"
+                                                aria-label={`Remove ${ingredient?.name}`}
+                                                className="shrink-0 rounded-full p-1 text-body/60 hover:bg-danger/10 hover:text-danger"
+                                                onClick={() =>
+                                                    removeIngredientFromRecipe(ri.ingredientId)
+                                                }
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        )}
                                     </div>
                                 );
                             })}
