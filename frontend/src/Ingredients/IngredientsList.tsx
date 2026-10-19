@@ -9,15 +9,22 @@ import PageTitle from "../components/ui/PageTitle";
 function IngredientsList() {
     const [ingredients, setIngredients] = useState<ExistingIngredient[]>([]);
     const [loading, setLoading] = useState(false);
+    const [loadFailed, setLoadFailed] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
         const loadIngredients = async () => {
             setLoading(true);
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients`);
-            const data = await res.json();
-            setIngredients(data);
-            setLoading(false);
+            try {
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients`);
+                if (!res.ok) throw new Error(`load failed: ${res.status}`);
+                setIngredients(await res.json());
+            } catch (err) {
+                console.error(err);
+                setLoadFailed(true);
+            } finally {
+                setLoading(false);
+            }
         };
 
         loadIngredients();
@@ -37,6 +44,8 @@ function IngredientsList() {
     const handleEdit = (id: number) => {
         navigate(`/ingredients/${id}`);
     };
+
+    if (loadFailed) return <div>Failed to Load</div>;
 
     return (
         <div className="h-full flex flex-col">

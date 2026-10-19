@@ -24,6 +24,5 @@ export interface NewIngredient {
 
 export interface ExistingIngredient extends NewIngredient {
     id: number;
-    createdAt: string;
     isUsedInRecipe: boolean;
 }

@@ -32,88 +32,104 @@ function RecipeDetails() {
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
-
-            await loadAllIngredients();
-            if (!isNew) {
-                await loadRecipe();
-            } else {
-                setEditMode(true);
+            try {
+                await loadAllIngredients();
+                if (!isNew) {
+                    await loadRecipe();
+                } else {
+                    setEditMode(true);
+                }
+            } catch (err) {
+                console.error(err);
+                setLoadFailed(true);
+            } finally {
+                setLoading(false);
             }
-
-            setLoading(false);
         };
 
         const loadRecipe = async () => {
             const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/${id}`);
+            if (!res.ok) throw new Error(`recipe load failed: ${res.status}`);
 
-            if (res.ok) {
-                const data: ExistingRecipe = await res.json();
-                setRecipe({
-                    name: data.name,
-                    price: data.price,
-                    description: data.description,
-                    ingredients: data.ingredients.map((ri) => ({
-                        ...ri,
-                        quantity: String(ri.quantity),
-                    })),
-                });
-            } else {
-                setLoadFailed(true);
-                console.error("load failed: ", res.status);
-            }
+            const data: ExistingRecipe = await res.json();
+            setRecipe({
+                name: data.name,
+                price: data.price,
+                description: data.description,
+                ingredients: data.ingredients.map((ri) => ({
+                    ...ri,
+                    quantity: String(ri.quantity),
+                })),
+            });
         };
 
         const loadAllIngredients = async () => {
             const res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients`);
-            const data = await res.json();
-            setAllIngredients(data);
+            if (!res.ok) throw new Error(`ingredients load failed: ${res.status}`);
+            setAllIngredients(await res.json());
         };
 
         loadData();
     }, [id, isNew]);
 
-    const handleSubmit = async () => {
-        //if (!validate()) return;
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const validate = () => {
+        const newErrors: Record<string, string> = {};
 
-        setSubmitting(true);
-
-        let res;
-
-        if (isNew) {
-            res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    ...recipe,
-                    ingredients: recipe.ingredients.map((ri) => ({
-                        ...ri,
-                        quantity: Number(ri.quantity),
-                    })),
-                }),
-            });
-        } else {
-            res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    ...recipe,
-                    ingredients: recipe.ingredients.map((ri) => ({
-                        ...ri,
-                        quantity: Number(ri.quantity),
-                    })),
-                }),
-            });
+        if (!recipe.name.trim()) {
+            newErrors.name = "Name is required";
         }
 
-        if (res.ok) {
+        if (!recipe.price.trim()) {
+            newErrors.price = "Price is required";
+        } else if (isNaN(Number(recipe.price)) || recipe.price.endsWith(".")) {
+            newErrors.price = "Price must be a number";
+        } else if (Number(recipe.price) <= 0) {
+            newErrors.price = "Price must be greater than 0";
+        } else if (recipe.price && !/^\d*\.?\d{0,2}$/.test(recipe.price)) {
+            newErrors.price = "Price must not have more than 2 decimal places";
+        }
+
+        if (!recipe.description.trim()) {
+            newErrors.description = "Description is required";
+        }
+
+        if (recipe.ingredients.some((ri) => !(Number(ri.quantity) > 0)))
+            newErrors.ingredients = "Ingredient quantities must all be greater than 0";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async () => {
+        if (!validate()) return;
+
+        setSubmitting(true);
+        try {
+            const res = await fetch(
+                `${import.meta.env.VITE_API_URL}/recipes${isNew ? "" : `/${id}`}`,
+                {
+                    method: isNew ? "POST" : "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        ...recipe,
+                        ingredients: recipe.ingredients.map((ri) => ({
+                            ...ri,
+                            quantity: Number(ri.quantity),
+                        })),
+                    }),
+                },
+            );
+            if (!res.ok) throw new Error(`${isNew ? "create" : "edit"} failed: ${res.status}`);
+
             const data = await res.json();
             setEditMode(false);
             navigate(`/recipes/${data.id}`);
-        } else {
-            console.error(`${isNew ? "create" : "edit"} failed: `, res.status);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setSubmitting(false);
         }
-
-        setSubmitting(false);
     };
 
     const addIngredientToRecipe = (id: number) => {
@@ -150,7 +166,7 @@ function RecipeDetails() {
         }
     };
 
-    if (!isNew && loadFailed) return <div>Failed to load data</div>;
+    if (loadFailed) return <div>Failed to load data</div>;
 
     if (loading)
         return (
@@ -211,6 +227,7 @@ function RecipeDetails() {
                     ) : (
                         <div>{recipe.name}</div>
                     )}
+                    {errors.name && <span className="text-danger text-sm">{errors.name}</span>}
                 </div>
 
                 <div className="flex mb-3 gap-3 items-center">
@@ -231,6 +248,7 @@ function RecipeDetails() {
                     ) : (
                         <div>£{recipe.price}</div>
                     )}
+                    {errors.price && <span className="text-danger text-sm">{errors.price}</span>}
                 </div>
 
                 <div className="flex mb-3 gap-3 items-center">
@@ -261,6 +279,9 @@ function RecipeDetails() {
                     ) : (
                         <div>{recipe.description}</div>
                     )}
+                    {errors.description && (
+                        <span className="text-danger text-sm">{errors.description}</span>
+                    )}
                 </div>
             </div>
 
@@ -280,6 +301,9 @@ function RecipeDetails() {
 
             <div className="border rounded-2xl flex flex-col max-h-80 p-2 my-4 bg-surface">
                 <SubTitle title="Ingredients"></SubTitle>
+                {errors.ingredients && (
+                    <span className="text-danger text-sm">{errors.ingredients}</span>
+                )}
                 <div className="flex-1 overflow-y-auto">
                     {recipe.ingredients.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 gap-x-4 mb-3">

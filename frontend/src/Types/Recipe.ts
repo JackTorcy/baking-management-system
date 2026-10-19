@@ -7,7 +7,6 @@ export interface NewRecipe {
 
 export interface ExistingRecipe extends NewRecipe {
     id: number;
-    createdAt: string;
 }
 
 export interface RecipeIngredient {

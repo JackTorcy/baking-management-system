@@ -20,8 +20,9 @@ public class RecipeService : IRecipeService
 
     public async Task<List<RecipeResponse>> GetAllAsync()
     {
-        //Need to copy include from GetAsync in order to get RecipeIngredients, if needed later
-        var recipes = await _db.Recipes.ToListAsync();
+        var recipes = await _db
+            .Recipes.Include(r => r.Ingredients.OrderBy(ri => ri.Id))
+            .ToListAsync();
         return recipes.Select(ToResponse).ToList();
     }
 

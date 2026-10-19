@@ -8,15 +8,22 @@ import { Link, useNavigate } from "react-router-dom";
 function RecipeList() {
     const [recipes, setRecipes] = useState<ExistingRecipe[]>([]);
     const [loading, setLoading] = useState(false);
+    const [loadFailed, setLoadFailed] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
         const loadRecipes = async () => {
             setLoading(true);
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`);
-            const data = await res.json();
-            setRecipes(data);
-            setLoading(false);
+            try {
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`);
+                if (!res.ok) throw new Error(`load failed: ${res.status}`);
+                setRecipes(await res.json());
+            } catch (err) {
+                console.error(err);
+                setLoadFailed(true);
+            } finally {
+                setLoading(false);
+            }
         };
 
         loadRecipes();
@@ -36,6 +43,8 @@ function RecipeList() {
     const handleEdit = (id: number) => {
         navigate(`/recipes/${id}`);
     };
+
+    if (loadFailed) return <div>Failed to Load</div>;
 
     return (
         <div className="h-full flex flex-col">

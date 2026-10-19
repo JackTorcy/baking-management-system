@@ -50,22 +50,22 @@ function IngredientDetails() {
 
         const loadIngredient = async () => {
             setLoading(true);
+            try {
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients/${id}`);
+                if (!res.ok) throw new Error(`load failed: ${res.status}`);
 
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients/${id}`);
-
-            if (res.ok) {
                 const data: ExistingIngredient = await res.json();
                 setIngredient({
                     name: data.name,
                     price: data.price,
                     ingredientUnit: data.ingredientUnit,
                 });
-            } else {
+            } catch (err) {
+                console.error(err);
                 setLoadFailed(true);
-                console.error("load failed: ", res.status);
+            } finally {
+                setLoading(false);
             }
-
-            setLoading(false);
         };
 
         loadIngredient();
@@ -75,31 +75,24 @@ function IngredientDetails() {
         if (!validate()) return;
 
         setSubmitting(true);
+        try {
+            const res = await fetch(
+                `${import.meta.env.VITE_API_URL}/ingredients${isEditing ? `/${id}` : ""}`,
+                {
+                    method: isEditing ? "PUT" : "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(ingredient),
+                },
+            );
+            if (!res.ok) throw new Error(`${isEditing ? "edit" : "create"} failed: ${res.status}`);
 
-        let res;
-
-        if (isEditing) {
-            res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(ingredient),
-            });
-        } else {
-            res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(ingredient),
-            });
-        }
-
-        if (res.ok) {
             const data = await res.json();
             navigate(`/ingredients/${data.id}`);
-        } else {
-            console.error(`${isEditing ? "edit" : "create"} failed: `, res.status);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setSubmitting(false);
         }
-
-        setSubmitting(false);
     };
 
     if (isEditing && loadFailed) return <div>Failed to load data</div>;
