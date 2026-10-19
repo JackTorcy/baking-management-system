@@ -118,6 +118,9 @@ namespace api_app.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BakeryId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -135,6 +138,8 @@ namespace api_app.Migrations
                         .HasColumnType("numeric(15,8)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BakeryId");
 
                     b.ToTable("Ingredients");
                 });
@@ -162,11 +167,16 @@ namespace api_app.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BakeryId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BakeryId");
 
                     b.ToTable("IngredientTags");
                 });
@@ -311,6 +321,9 @@ namespace api_app.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BakeryId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -329,6 +342,8 @@ namespace api_app.Migrations
                         .HasColumnType("numeric");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BakeryId");
 
                     b.ToTable("Recipes");
                 });
@@ -405,11 +420,16 @@ namespace api_app.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BakeryId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BakeryId");
 
                     b.ToTable("RecipeTags");
                 });
@@ -420,6 +440,17 @@ namespace api_app.Migrations
                         .WithMany("Users")
                         .HasForeignKey("BakeryId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Bakery");
+                });
+
+            modelBuilder.Entity("Ingredient", b =>
+                {
+                    b.HasOne("Bakery", "Bakery")
+                        .WithMany()
+                        .HasForeignKey("BakeryId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Bakery");
@@ -438,6 +469,17 @@ namespace api_app.Migrations
                         .HasForeignKey("UsedInIngredientsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("IngredientTag", b =>
+                {
+                    b.HasOne("Bakery", "Bakery")
+                        .WithMany()
+                        .HasForeignKey("BakeryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bakery");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -491,6 +533,17 @@ namespace api_app.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Recipe", b =>
+                {
+                    b.HasOne("Bakery", "Bakery")
+                        .WithMany()
+                        .HasForeignKey("BakeryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bakery");
+                });
+
             modelBuilder.Entity("RecipeComponent", b =>
                 {
                     b.HasOne("Recipe", "ComponentRecipe")
@@ -542,6 +595,17 @@ namespace api_app.Migrations
                         .HasForeignKey("UsedInRecipesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("RecipeTag", b =>
+                {
+                    b.HasOne("Bakery", "Bakery")
+                        .WithMany()
+                        .HasForeignKey("BakeryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bakery");
                 });
 
             modelBuilder.Entity("Bakery", b =>

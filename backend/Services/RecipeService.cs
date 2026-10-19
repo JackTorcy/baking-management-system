@@ -7,6 +7,7 @@ public interface IRecipeService
     Task<RecipeResponse> CreateAsync(SaveRecipe dto);
     Task<bool> DeleteAsync(int id);
     Task<RecipeResponse?> UpdateAsync(int id, SaveRecipe dto);
+    Task<bool> IngredientsExistAsync(List<RecipeIngredientDto> ingredients);
 }
 
 public class RecipeService : IRecipeService
@@ -120,4 +121,11 @@ public class RecipeService : IRecipeService
                 })
                 .ToList(),
         };
+
+    public async Task<bool> IngredientsExistAsync(List<RecipeIngredientDto> ingredients)
+    {
+        var ids = ingredients.Select(i => i.IngredientId).Distinct().ToList();
+        var found = await _db.Ingredients.CountAsync(i => ids.Contains(i.Id));
+        return found == ids.Count;
+    }
 }

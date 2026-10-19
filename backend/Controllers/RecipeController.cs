@@ -30,6 +30,9 @@ public class RecipeController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<RecipeResponse>> CreateRecipe(SaveRecipe dto)
     {
+        if (!await _service.IngredientsExistAsync(dto.Ingredients))
+            return BadRequest("One or more ingredients don't exist");
+
         var recipe = await _service.CreateAsync(dto);
         if (recipe == null)
             return BadRequest("Failed to save");
@@ -40,6 +43,9 @@ public class RecipeController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<RecipeResponse>> UpdateRecipe(int id, SaveRecipe dto)
     {
+        if (!await _service.IngredientsExistAsync(dto.Ingredients))
+            return BadRequest("One or more ingredients don't exist");
+
         var recipe = await _service.UpdateAsync(id, dto);
         if (recipe == null)
             return NotFound();

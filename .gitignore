@@ -7,6 +7,7 @@ frontend/.env.*
 # Backend
 backend/bin/
 backend/obj/
+backend/cookies*.txt
 
 # General
 .DS_Store

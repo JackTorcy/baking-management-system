@@ -3,9 +3,15 @@ using Microsoft.EntityFrameworkCore;
 
 public class AppDbContext : IdentityDbContext<AppUser>
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options) { }
+    private readonly ICurrentUser _currentUser;
 
+    public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUser currentUser)
+        : base(options)
+    {
+        _currentUser = currentUser;
+    }
+
+    private int CurrentBakeryId => _currentUser.BakeryId;
     public DbSet<Bakery> Bakeries => Set<Bakery>();
     public DbSet<Ingredient> Ingredients => Set<Ingredient>();
     public DbSet<IngredientTag> IngredientTags => Set<IngredientTag>();
@@ -26,9 +32,14 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasForeignKey(u => u.BakeryId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<Ingredient>().HasQueryFilter(i => i.DeletedAt == null);
-
-        modelBuilder.Entity<Recipe>().HasQueryFilter(r => r.DeletedAt == null);
+        modelBuilder
+            .Entity<Ingredient>()
+            .HasQueryFilter(i => i.DeletedAt == null && i.BakeryId == CurrentBakeryId);
+        modelBuilder
+            .Entity<Recipe>()
+            .HasQueryFilter(r => r.DeletedAt == null && r.BakeryId == CurrentBakeryId);
+        modelBuilder.Entity<IngredientTag>().HasQueryFilter(t => t.BakeryId == CurrentBakeryId);
+        modelBuilder.Entity<RecipeTag>().HasQueryFilter(t => t.BakeryId == CurrentBakeryId);
 
         // Recipe ↔ Recipe (self-referencing — needs explicit FK mapping)
         modelBuilder
@@ -57,5 +68,20 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasOne(ri => ri.Ingredient)
             .WithMany(i => i.UsedInRecipes)
             .HasForeignKey(ri => ri.IngredientId);
+    }
+
+    public override Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default
+    )
+    {
+        foreach (
+            var entry in ChangeTracker
+                .Entries<IBakeryOwned>()
+                .Where(e => e.State == EntityState.Added)
+        )
+            entry.Entity.BakeryId = _currentUser.BakeryId;
+
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 }
