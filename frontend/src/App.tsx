@@ -1,32 +1,45 @@
-import { Route, Routes } from "react-router-dom";
+import { Outlet, Route, Routes } from "react-router-dom";
 import RecipeList from "./recipes/RecipeList.tsx";
 import IngredientsList from "./ingredients/IngredientsList.tsx";
 import IngredientDetails from "./ingredients/IngredientDetails.tsx";
 import TopNav from "./components/nav/TopNav.tsx";
 import BottomNav from "./components/nav/BottomNav.tsx";
 import RecipeDetails from "./recipes/RecipeDetails.tsx";
+import Login from "./users/Login.tsx";
+import Register from "./users/Register.tsx";
 
-function App() {
+function AppLayout() {
     return (
         <div className="h-screen flex flex-col">
             <TopNav className="hidden md:flex h-20 shrink-0 bg-primary" />
 
             <main className="flex-1 overflow-hidden">
-                <section className="max-w-5xl mx-auto px-4 h-full py-6">
-                    <Routes>
-                        <Route path="/recipes" element={<RecipeList />}></Route>
-                        <Route path="/recipes/new" element={<RecipeDetails />}></Route>
-                        <Route path="/recipes/:id" element={<RecipeDetails />}></Route>
-
-                        <Route path="/ingredients" element={<IngredientsList />}></Route>
-                        <Route path="/ingredients/new" element={<IngredientDetails />}></Route>
-                        <Route path="/ingredients/:id" element={<IngredientDetails />}></Route>
-                    </Routes>
+                <section className="max-w-5xl mx-auto px-4 h=full py-6">
+                    <Outlet />
                 </section>
             </main>
 
             <BottomNav className="flex md:hidden h-20 shrink-0 bg-primary" />
         </div>
+    );
+}
+
+function App() {
+    return (
+        <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            <Route element={<AppLayout />}>
+                <Route path="/recipes" element={<RecipeList />} />
+                <Route path="/recipes/new" element={<RecipeDetails />} />
+                <Route path="/recipes/:id" element={<RecipeDetails />} />
+
+                <Route path="/ingredients" element={<IngredientsList />} />
+                <Route path="/ingredients/new" element={<IngredientDetails />} />
+                <Route path="/ingredients/:id" element={<IngredientDetails />} />
+            </Route>
+        </Routes>
     );
 }
 
