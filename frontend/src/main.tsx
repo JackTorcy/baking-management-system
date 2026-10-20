@@ -4,11 +4,14 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App.tsx";
 import "./index.css";
 import "@fontsource-variable/nunito";
+import AuthProvider from "./auth/AuthProvider.tsx";
 
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
         <BrowserRouter>
-            <App />
+            <AuthProvider>
+                <App />
+            </AuthProvider>
         </BrowserRouter>
     </StrictMode>,
 );

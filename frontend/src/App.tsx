@@ -1,14 +1,20 @@
-import { Outlet, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import RecipeList from "./recipes/RecipeList.tsx";
 import IngredientsList from "./ingredients/IngredientsList.tsx";
 import IngredientDetails from "./ingredients/IngredientDetails.tsx";
 import TopNav from "./components/nav/TopNav.tsx";
 import BottomNav from "./components/nav/BottomNav.tsx";
 import RecipeDetails from "./recipes/RecipeDetails.tsx";
-import Login from "./users/Login.tsx";
-import Register from "./users/Register.tsx";
+import Login from "./auth/Login.tsx";
+import Register from "./auth/Register.tsx";
+import { useAuth } from "./auth/AuthContext.ts";
 
 function AppLayout() {
+    const { user, loading } = useAuth();
+
+    if (loading) return null;
+    if (!user) return <Navigate to="/login" replace />;
+
     return (
         <div className="h-screen flex flex-col">
             <TopNav className="hidden md:flex h-20 shrink-0 bg-primary" />
@@ -27,6 +33,7 @@ function AppLayout() {
 function App() {
     return (
         <Routes>
+            <Route path="/" element={<Navigate to="/recipes" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 

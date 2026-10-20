@@ -5,12 +5,14 @@ import { Link, useNavigate } from "react-router-dom";
 import type { ExistingIngredient } from "../types/Ingredient";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import PageTitle from "../components/ui/PageTitle";
+import { useAuth } from "../auth/AuthContext";
 
 function IngredientsList() {
     const [ingredients, setIngredients] = useState<ExistingIngredient[]>([]);
     const [loading, setLoading] = useState(false);
     const [loadFailed, setLoadFailed] = useState(false);
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     useEffect(() => {
         const loadIngredients = async () => {
@@ -87,36 +89,48 @@ function IngredientsList() {
                     </div>
                 ) : (
                     <div>
-                        {ingredients.map((i) => (
+                        {ingredients.length === 0 ? (
                             <div
-                                className="w-full mb-2 bg-surface border rounded-2xl p-4 border-border"
-                                key={i.id}
+                                role="status"
+                                className="mb-4 rounded-xl bg-secondary/10 px-4 py-3 text-secondary-dark"
                             >
-                                <div className="flex justify-between mb-2">
-                                    <div>{i.name}</div>
-                                    <div className="space-x-2">
-                                        <button
-                                            type="button"
-                                            className="rounded-full p-2 border border-border bg-gray-50 hover:bg-secondary"
-                                            onClick={() => handleEdit(i.id)}
-                                        >
-                                            <Pencil className="text-header"></Pencil>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="rounded-full p-2 border border-border bg-gray-50 hover:bg-danger disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-50"
-                                            disabled={i.isUsedInRecipe}
-                                            onClick={() => deleteIngredient(i.id)}
-                                        >
-                                            <Trash className="text-header"></Trash>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div>
-                                    £{i.price} per {i.ingredientUnit}
-                                </div>
+                                Welcome, {user?.bakeryName}! Get started by adding your first
+                                ingredient.
                             </div>
-                        ))}
+                        ) : (
+                            <div>
+                                {ingredients.map((i) => (
+                                    <div
+                                        className="w-full mb-2 bg-surface border rounded-2xl p-4 border-border"
+                                        key={i.id}
+                                    >
+                                        <div className="flex justify-between mb-2">
+                                            <div>{i.name}</div>
+                                            <div className="space-x-2">
+                                                <button
+                                                    type="button"
+                                                    className="rounded-full p-2 border border-border bg-gray-50 hover:bg-secondary"
+                                                    onClick={() => handleEdit(i.id)}
+                                                >
+                                                    <Pencil className="text-header"></Pencil>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="rounded-full p-2 border border-border bg-gray-50 hover:bg-danger disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-50"
+                                                    disabled={i.isUsedInRecipe}
+                                                    onClick={() => deleteIngredient(i.id)}
+                                                >
+                                                    <Trash className="text-header"></Trash>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            £{i.price} per {i.ingredientUnit}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

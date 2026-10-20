@@ -45,7 +45,8 @@ builder
     })
     .AddEntityFrameworkStores<AppDbContext>()
     .AddSignInManager()
-    .AddClaimsPrincipalFactory<BakeryClaimsPrincipalFactory>();
+    .AddClaimsPrincipalFactory<BakeryClaimsPrincipalFactory>()
+    .AddErrorDescriber<AuthErrorDescriber>();
 
 builder.Services.ConfigureApplicationCookie(options =>
 {

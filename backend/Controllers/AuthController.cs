@@ -41,7 +41,7 @@ public class AuthController : ControllerBase
         };
         var result = await _userManager.CreateAsync(user, dto.Password);
         if (!result.Succeeded)
-            return BadRequest(result.Errors.Select(e => e.Description));
+            return BadRequest(result.Errors.Select(e => e.Description).Distinct());
 
         await transaction.CommitAsync();
         await _signInManager.SignInAsync(user, isPersistent: true);
