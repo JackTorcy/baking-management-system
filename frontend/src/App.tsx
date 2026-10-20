@@ -2,7 +2,6 @@ import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import RecipeList from "./recipes/RecipeList.tsx";
 import IngredientsList from "./ingredients/IngredientsList.tsx";
 import IngredientDetails from "./ingredients/IngredientDetails.tsx";
-import TopNav from "./components/nav/TopNav.tsx";
 import BottomNav from "./components/nav/BottomNav.tsx";
 import RecipeDetails from "./recipes/RecipeDetails.tsx";
 import Login from "./auth/Login.tsx";
@@ -11,6 +10,7 @@ import { useAuth } from "./auth/AuthContext.ts";
 import Orders from "./orders/Orders.tsx";
 import BakePlan from "./bakePlan/BakePlan.tsx";
 import Settings from "./settings/Settings.tsx";
+import LeftNav from "./components/nav/LeftNav.tsx";
 
 function AppLayout() {
     const { user, loading } = useAuth();
@@ -19,8 +19,8 @@ function AppLayout() {
     if (!user) return <Navigate to="/login" replace />;
 
     return (
-        <div className="h-screen flex flex-col">
-            <TopNav className="hidden md:flex h-20 shrink-0 bg-primary" />
+        <div className="h-screen flex flex-col lg:flex-row">
+            <LeftNav className="hidden lg:flex h-full w-64 bg-nav border-r border-nav-border" />
 
             <main className="flex-1 overflow-hidden">
                 <section className="max-w-5xl mx-auto px-4 h-full py-6">
@@ -28,7 +28,7 @@ function AppLayout() {
                 </section>
             </main>
 
-            <BottomNav className="flex md:hidden h-20 shrink-0 bg-primary" />
+            <BottomNav className="flex lg:hidden h-20 shrink-0 bg-primary" />
         </div>
     );
 }

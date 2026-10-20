@@ -9,6 +9,8 @@
     --color-background: #fbf7f2; /* Page background - off white */
     --color-surface: #ffffff; /* Cards, table rows, raised areas */
     --color-border: #c4b4a4; /* light-grey dividers */
+    --color-nav: #f6efe6; /* Warm navbar */
+    --color-nav-border: #e3d3c4; /* navbar borders */
 
     --color-header: #1f1a18; /* Near-black for header text */
     --color-body: #6e635c; /* warm grey for body text */
