@@ -23,7 +23,7 @@ function LeftNav({ className = "" }: { className?: string }) {
     return (
         <nav className={`flex px-3 py-5 flex-col justify-between ${className}`}>
             <div>
-                <div className="px-3 flex items-center mb-10">
+                <div className="px-3 flex items-center mb-6 border-b-4 pb-5 border-primary">
                     <ChefHat className="h-8 w-8 mr-2 text-primary" />
                     <div className="font-bold text-header text-xl">Baking Management</div>
                 </div>
