@@ -19,7 +19,7 @@
 }
 
 :root {
-    --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+    --sans: "Nunito Variable", system-ui, "Segoe UI", Roboto, sans-serif;
 
     font: 18px/145% var(--sans);
     letter-spacing: 0.18px;
