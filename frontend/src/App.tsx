@@ -8,6 +8,9 @@ import RecipeDetails from "./recipes/RecipeDetails.tsx";
 import Login from "./auth/Login.tsx";
 import Register from "./auth/Register.tsx";
 import { useAuth } from "./auth/AuthContext.ts";
+import Orders from "./orders/Orders.tsx";
+import BakePlan from "./bakePlan/BakePlan.tsx";
+import Settings from "./settings/Settings.tsx";
 
 function AppLayout() {
     const { user, loading } = useAuth();
@@ -45,6 +48,10 @@ function App() {
                 <Route path="/ingredients" element={<IngredientsList />} />
                 <Route path="/ingredients/new" element={<IngredientDetails />} />
                 <Route path="/ingredients/:id" element={<IngredientDetails />} />
+
+                <Route path="/orders" element={<Orders />} />
+                <Route path="/bakeplan" element={<BakePlan />} />
+                <Route path="/settings" element={<Settings />} />
             </Route>
         </Routes>
     );

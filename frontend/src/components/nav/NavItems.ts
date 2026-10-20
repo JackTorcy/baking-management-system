@@ -1,4 +1,4 @@
-import { BookBookmark, Carrot } from "lucide-react";
+import { BookOpen, Carrot, ReceiptText, Calendar1, Settings } from "lucide-react";
 
 //Not sure about icons:
 //Possible for Recipes include CookingPot, BookBookmark, BookText, ChefHat
@@ -6,5 +6,8 @@ import { BookBookmark, Carrot } from "lucide-react";
 
 export const navItems = [
     { to: "/ingredients", label: "Ingredients", icon: Carrot },
-    { to: "/recipes", label: "Recipes", icon: BookBookmark },
+    { to: "/recipes", label: "Recipes", icon: BookOpen },
+    { to: "/orders", label: "Orders", icon: ReceiptText },
+    { to: "/bakeplan", label: "Bake plan", icon: Calendar1 },
+    { to: "/settings", label: "Settings", icon: Settings },
 ];
