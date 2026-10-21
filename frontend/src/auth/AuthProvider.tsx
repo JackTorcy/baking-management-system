@@ -5,6 +5,17 @@ function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<CurrentUser | null>(null);
     const [loading, setLoading] = useState(true);
 
+    const logout = async () => {
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
+                method: "POST",
+            });
+            if (res.ok) setUser(null);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     useEffect(() => {
         const loadMe = async () => {
             try {
@@ -21,7 +32,9 @@ function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, loading, setUser }}>{children}</AuthContext.Provider>
+        <AuthContext.Provider value={{ user, loading, setUser, logout }}>
+            {children}
+        </AuthContext.Provider>
     );
 }
 

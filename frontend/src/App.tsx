@@ -11,6 +11,9 @@ import Orders from "./orders/Orders.tsx";
 import BakePlan from "./bakePlan/BakePlan.tsx";
 import Settings from "./settings/Settings.tsx";
 import LeftNav from "./components/nav/LeftNav.tsx";
+import Account from "./auth/Account.tsx";
+import More from "./more/More.tsx";
+import Sessions from "./sessions/Sessions.tsx";
 
 function AppLayout() {
     const { user, loading } = useAuth();
@@ -28,7 +31,7 @@ function AppLayout() {
                 </section>
             </main>
 
-            <BottomNav className="flex lg:hidden h-20 shrink-0 bg-primary" />
+            <BottomNav className="flex lg:hidden h-20 shrink-0 bg-nav border-t border-nav-border" />
         </div>
     );
 }
@@ -49,9 +52,12 @@ function App() {
                 <Route path="/ingredients/new" element={<IngredientDetails />} />
                 <Route path="/ingredients/:id" element={<IngredientDetails />} />
 
+                <Route path="/sessions" element={<Sessions />} />
                 <Route path="/orders" element={<Orders />} />
                 <Route path="/bakeplan" element={<BakePlan />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/account" element={<Account />} />
+                <Route path="/more" element={<More />} />
             </Route>
         </Routes>
     );

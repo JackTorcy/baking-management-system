@@ -10,6 +10,7 @@ interface AuthState {
     user: CurrentUser | null;
     loading: boolean;
     setUser: (user: CurrentUser | null) => void;
+    logout: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthState | null>(null);
