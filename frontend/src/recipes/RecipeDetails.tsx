@@ -202,12 +202,12 @@ function RecipeDetails() {
         );
 
     return (
-        <>
+        <div className="h-full flex flex-col">
             {/* Edit View vs Read View important */}
 
             {/* ----- Page content ------ */}
             {/* Title Part, Back arrow */}
-            <div className="flex mb-4 items-center justify-between text-header">
+            <div className="shrink-0 flex mb-4 items-center justify-between text-header">
                 <div className="flex gap-3 items-center">
                     <Link to="/recipes">
                         <ArrowLeft className="h-8 w-8" />
@@ -233,86 +233,89 @@ function RecipeDetails() {
             </div>
 
             {/* Summary (Name, Total Price, Description) */}
-            <div className="border rounded-2xl flex flex-col max-h-80 p-2 my-4 bg-surface">
-                <SubTitle title="Summary"></SubTitle>
-                <div className="flex mb-3 gap-3 items-center">
-                    <label htmlFor="name">Name:</label>
-                    {editMode ? (
-                        <input
-                            id="name"
-                            type="text"
-                            className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
-                            value={recipe.name}
-                            onChange={(e) =>
-                                setRecipe((prev) => ({
-                                    ...prev,
-                                    name: e.target.value,
-                                }))
-                            }
-                        />
-                    ) : (
-                        <div>{recipe.name}</div>
-                    )}
-                    {errors.name && <span className="text-danger text-sm">{errors.name}</span>}
-                </div>
+            <div className="flex-1 overflow-y-auto">
+                <div className="border rounded-2xl flex flex-col max-h-80 p-2 my-4 bg-surface">
+                    <SubTitle title="Summary"></SubTitle>
+                    <div className="flex mb-3 gap-3 items-center">
+                        <label htmlFor="name">Name:</label>
+                        {editMode ? (
+                            <input
+                                id="name"
+                                type="text"
+                                className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
+                                value={recipe.name}
+                                onChange={(e) =>
+                                    setRecipe((prev) => ({
+                                        ...prev,
+                                        name: e.target.value,
+                                    }))
+                                }
+                            />
+                        ) : (
+                            <div>{recipe.name}</div>
+                        )}
+                        {errors.name && <span className="text-danger text-sm">{errors.name}</span>}
+                    </div>
 
-                <div className="flex mb-3 gap-3 items-center">
-                    <label htmlFor="price">Price:</label>
-                    {editMode ? (
-                        <input
-                            id="price"
-                            type="text"
-                            className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
-                            value={recipe.price}
-                            onChange={(e) =>
-                                setRecipe((prev) => ({
-                                    ...prev,
-                                    price: e.target.value,
-                                }))
-                            }
-                        />
-                    ) : (
-                        <div>£{recipe.price}</div>
-                    )}
-                    {errors.price && <span className="text-danger text-sm">{errors.price}</span>}
-                </div>
+                    <div className="flex mb-3 gap-3 items-center">
+                        <label htmlFor="price">Price:</label>
+                        {editMode ? (
+                            <input
+                                id="price"
+                                type="text"
+                                className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
+                                value={recipe.price}
+                                onChange={(e) =>
+                                    setRecipe((prev) => ({
+                                        ...prev,
+                                        price: e.target.value,
+                                    }))
+                                }
+                            />
+                        ) : (
+                            <div>£{recipe.price}</div>
+                        )}
+                        {errors.price && (
+                            <span className="text-danger text-sm">{errors.price}</span>
+                        )}
+                    </div>
 
-                <div className="flex mb-3 gap-3 items-center">
-                    <span>Ingredient cost:</span>
-                    <div>
-                        {ingredientCost.toLocaleString("en-GB", {
-                            style: "currency",
-                            currency: "GBP",
-                        })}
+                    <div className="flex mb-3 gap-3 items-center">
+                        <span>Ingredient cost:</span>
+                        <div>
+                            {ingredientCost.toLocaleString("en-GB", {
+                                style: "currency",
+                                currency: "GBP",
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="flex mb-3 gap-3 items-center">
+                        <label htmlFor="description">Description:</label>
+                        {editMode ? (
+                            <input
+                                id="description"
+                                type="text"
+                                className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
+                                value={recipe.description}
+                                onChange={(e) =>
+                                    setRecipe((prev) => ({
+                                        ...prev,
+                                        description: e.target.value,
+                                    }))
+                                }
+                            />
+                        ) : (
+                            <div>{recipe.description}</div>
+                        )}
+                        {errors.description && (
+                            <span className="text-danger text-sm">{errors.description}</span>
+                        )}
                     </div>
                 </div>
 
-                <div className="flex mb-3 gap-3 items-center">
-                    <label htmlFor="description">Description:</label>
-                    {editMode ? (
-                        <input
-                            id="description"
-                            type="text"
-                            className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
-                            value={recipe.description}
-                            onChange={(e) =>
-                                setRecipe((prev) => ({
-                                    ...prev,
-                                    description: e.target.value,
-                                }))
-                            }
-                        />
-                    ) : (
-                        <div>{recipe.description}</div>
-                    )}
-                    {errors.description && (
-                        <span className="text-danger text-sm">{errors.description}</span>
-                    )}
-                </div>
-            </div>
-
-            {/* Overview (serves, prep, cook times) */}
-            {/* <div className="bg-surface my-4">
+                {/* Overview (serves, prep, cook times) */}
+                {/* <div className="bg-surface my-4">
                 <div className="flex-col">
                     <div className="flex">
                         <div className="flex-1">Serves:</div>
@@ -325,145 +328,151 @@ function RecipeDetails() {
                 </div>
             </div> */}
 
-            <div className="border rounded-2xl flex flex-col max-h-80 p-2 my-4 bg-surface">
-                <SubTitle title="Ingredients"></SubTitle>
-                {errors.ingredients && (
-                    <span className="text-danger text-sm">{errors.ingredients}</span>
-                )}
-                <div className="flex-1 overflow-y-auto">
-                    {recipe.ingredients.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 gap-x-4 mb-3">
-                            {recipe.ingredients.map((ri) => {
-                                const ingredient = allIngredients.find(
-                                    (i) => i.id === ri.ingredientId,
-                                );
-                                const unitOptions = unitsOfKind(unitKind[ri.unit]);
-                                return (
-                                    <div key={ri.ingredientId} className="flex items-center gap-2">
-                                        {editMode ? (
-                                            // <span>
-                                            //     <input
-                                            //         onChange={(e) =>
-                                            //             updateIngredientQuantity(
-                                            //                 Number(ri.ingredientId),
-                                            //                 Number(e.target.value),
-                                            //             )
-                                            //         }
-                                            //         className="border border-border rounded-2xl w-14 px-2"
-                                            //         value={ri.quantity}
-                                            //     />
-                                            //     &nbsp;
-                                            //     {unitLabel[ingredient?.ingredientUnit ?? ""] ??
-                                            //         ingredient?.ingredientUnit}
-                                            // </span>
-                                            <label className="flex w-28 shrink-0 items-center rounded-lg border border-border/70 bg-background px-2 py-0.5 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
-                                                <input
-                                                    inputMode="decimal"
-                                                    aria-label={`Quantity of ${ingredient?.name}`}
-                                                    className="w-full min-w-0 bg-transparent text-right tabular-nums text-header outline-none"
-                                                    value={ri.quantity}
-                                                    onChange={(e) => {
-                                                        if (/^\d*\.?\d*$/.test(e.target.value))
-                                                            updateIngredientQuantity(
-                                                                ri.ingredientId,
-                                                                e.target.value,
-                                                            );
-                                                    }}
-                                                />
-                                                {unitOptions.length > 1 ? (
-                                                    <select
-                                                        aria-label={`Unit for ${ingredient?.name}`}
-                                                        className="ml-1 bg-transparent text-sm text-body/70 outline-none"
-                                                        value={ri.unit}
-                                                        onChange={(e) =>
-                                                            updateIngredientUnit(
-                                                                ri.ingredientId,
-                                                                e.target.value as IngredientUnit,
-                                                            )
-                                                        }
-                                                    >
-                                                        {unitOptions.map((unit) => (
-                                                            <option key={unit} value={unit}>
-                                                                {unitLabel[unit]}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                ) : (
-                                                    <span className="ml-1 text-sm text-body/70">
-                                                        {unitLabel[ri.unit]}
-                                                    </span>
-                                                )}
-                                            </label>
-                                        ) : (
-                                            <span className="w-14 shrink-0 text-right tabular-nums font-medium text-header">
-                                                {ri.quantity}
-                                                {unitLabel[ri.unit]}
+                <div className="border rounded-2xl flex flex-col max-h-80 p-2 my-4 bg-surface">
+                    <SubTitle title="Ingredients"></SubTitle>
+                    {errors.ingredients && (
+                        <span className="text-danger text-sm">{errors.ingredients}</span>
+                    )}
+                    <div className="flex-1 overflow-y-auto">
+                        {recipe.ingredients.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 gap-x-4 mb-3">
+                                {recipe.ingredients.map((ri) => {
+                                    const ingredient = allIngredients.find(
+                                        (i) => i.id === ri.ingredientId,
+                                    );
+                                    const unitOptions = unitsOfKind(unitKind[ri.unit]);
+                                    return (
+                                        <div
+                                            key={ri.ingredientId}
+                                            className="flex items-center gap-2"
+                                        >
+                                            {editMode ? (
+                                                // <span>
+                                                //     <input
+                                                //         onChange={(e) =>
+                                                //             updateIngredientQuantity(
+                                                //                 Number(ri.ingredientId),
+                                                //                 Number(e.target.value),
+                                                //             )
+                                                //         }
+                                                //         className="border border-border rounded-2xl w-14 px-2"
+                                                //         value={ri.quantity}
+                                                //     />
+                                                //     &nbsp;
+                                                //     {unitLabel[ingredient?.ingredientUnit ?? ""] ??
+                                                //         ingredient?.ingredientUnit}
+                                                // </span>
+                                                <label className="flex w-28 shrink-0 items-center rounded-lg border border-border/70 bg-background px-2 py-0.5 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+                                                    <input
+                                                        inputMode="decimal"
+                                                        aria-label={`Quantity of ${ingredient?.name}`}
+                                                        className="w-full min-w-0 bg-transparent text-right tabular-nums text-header outline-none"
+                                                        value={ri.quantity}
+                                                        onChange={(e) => {
+                                                            if (/^\d*\.?\d*$/.test(e.target.value))
+                                                                updateIngredientQuantity(
+                                                                    ri.ingredientId,
+                                                                    e.target.value,
+                                                                );
+                                                        }}
+                                                    />
+                                                    {unitOptions.length > 1 ? (
+                                                        <select
+                                                            aria-label={`Unit for ${ingredient?.name}`}
+                                                            className="ml-1 bg-transparent text-sm text-body/70 outline-none"
+                                                            value={ri.unit}
+                                                            onChange={(e) =>
+                                                                updateIngredientUnit(
+                                                                    ri.ingredientId,
+                                                                    e.target
+                                                                        .value as IngredientUnit,
+                                                                )
+                                                            }
+                                                        >
+                                                            {unitOptions.map((unit) => (
+                                                                <option key={unit} value={unit}>
+                                                                    {unitLabel[unit]}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    ) : (
+                                                        <span className="ml-1 text-sm text-body/70">
+                                                            {unitLabel[ri.unit]}
+                                                        </span>
+                                                    )}
+                                                </label>
+                                            ) : (
+                                                <span className="w-14 shrink-0 text-right tabular-nums font-medium text-header">
+                                                    {ri.quantity}
+                                                    {unitLabel[ri.unit]}
+                                                </span>
+                                            )}
+
+                                            <span className="truncate flex-1 min-w-0">
+                                                {ingredient?.name}
                                             </span>
-                                        )}
+                                            {editMode && (
+                                                <button
+                                                    type="button"
+                                                    aria-label={`Remove ${ingredient?.name}`}
+                                                    className="shrink-0 rounded-full p-1 text-body/60 hover:bg-danger/10 hover:text-danger"
+                                                    onClick={() =>
+                                                        removeIngredientFromRecipe(ri.ingredientId)
+                                                    }
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="mb-3 text-center">
+                                No ingredients added yet. Add ingredients to get started!
+                            </div>
+                        )}
+                    </div>
 
-                                        <span className="truncate flex-1 min-w-0">
-                                            {ingredient?.name}
-                                        </span>
-                                        {editMode && (
-                                            <button
-                                                type="button"
-                                                aria-label={`Remove ${ingredient?.name}`}
-                                                className="shrink-0 rounded-full p-1 text-body/60 hover:bg-danger/10 hover:text-danger"
-                                                onClick={() =>
-                                                    removeIngredientFromRecipe(ri.ingredientId)
-                                                }
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </button>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <div className="mb-3 text-center">
-                            No ingredients added yet. Add ingredients to get started!
-                        </div>
-                    )}
+                    {/* dropdown — fixed at the bottom of the panel, doesn't move */}
+                    <div hidden={!editMode} className="shrink-0 border-t pt-3 border-border">
+                        <select
+                            onChange={(e) => addIngredientToRecipe(Number(e.target.value))}
+                            className="w-full border border-border rounded-2xl px-3 py-2"
+                        >
+                            <option key="" value="">
+                                Select
+                            </option>
+                            {allIngredients
+                                .filter(
+                                    (i) =>
+                                        !recipe.ingredients.some((ri) => ri.ingredientId === i.id),
+                                )
+                                .map((i) => (
+                                    <option key={i.id} value={i.id}>
+                                        {i.name}
+                                    </option>
+                                ))}
+                        </select>
+                    </div>
                 </div>
 
-                {/* dropdown — fixed at the bottom of the panel, doesn't move */}
-                <div hidden={!editMode} className="shrink-0 border-t pt-3 border-border">
-                    <select
-                        onChange={(e) => addIngredientToRecipe(Number(e.target.value))}
-                        className="w-full border border-border rounded-2xl px-3 py-2"
+                <div hidden={!editMode} className="flex justify-end">
+                    <button
+                        type="button"
+                        disabled={submitting}
+                        className="border flex min-w-40 min-h-8 items-center justify-center border-border text-header rounded-2xl py-1 px-3 bg-primary hover:bg-primary-dark"
+                        onClick={() => handleSubmit()}
                     >
-                        <option key="" value="">
-                            Select
-                        </option>
-                        {allIngredients
-                            .filter(
-                                (i) => !recipe.ingredients.some((ri) => ri.ingredientId === i.id),
-                            )
-                            .map((i) => (
-                                <option key={i.id} value={i.id}>
-                                    {i.name}
-                                </option>
-                            ))}
-                    </select>
+                        {submitting ? (
+                            <LoadingSpinner className="w-4 h-4" />
+                        ) : editMode ? (
+                            "Save Changes"
+                        ) : (
+                            "Create"
+                        )}
+                    </button>
                 </div>
-            </div>
-
-            <div hidden={!editMode} className="flex justify-end">
-                <button
-                    type="button"
-                    disabled={submitting}
-                    className="border flex min-w-40 min-h-8 items-center justify-center border-border text-header rounded-2xl py-1 px-3 bg-primary hover:bg-primary-dark"
-                    onClick={() => handleSubmit()}
-                >
-                    {submitting ? (
-                        <LoadingSpinner className="w-4 h-4" />
-                    ) : editMode ? (
-                        "Save Changes"
-                    ) : (
-                        "Create"
-                    )}
-                </button>
             </div>
 
             {/* Scaling? */}
@@ -476,7 +485,7 @@ function RecipeDetails() {
             {/* This allows you to in sessions track and tick off ingredients as the product is made */}
             {/* Should allow for really simple and clean UX */}
             {/* Will need to add a boolean flag to Recipe Ingredient and Recipe Component joins to allow use to tick them off */}
-        </>
+        </div>
     );
 }
 

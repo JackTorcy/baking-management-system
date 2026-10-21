@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pencil, Trash, Plus, Search, Link2 } from "lucide-react";
+import { Plus, Search, Link2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { formatUnitPrice, pricePer, unitLabel, type ExistingIngredient } from "../types/Ingredient";
@@ -32,17 +32,6 @@ function IngredientsList() {
 
         loadIngredients();
     }, []);
-
-    const deleteIngredient = async (id: number) => {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients/${id}`, {
-            method: "DELETE",
-        });
-        if (res.ok) {
-            setIngredients((ingredient) => ingredient.filter((i) => i.id != id));
-        } else {
-            console.error("delete failed: ", res.status);
-        }
-    };
 
     const handleEdit = (id: number) => {
         navigate(`/ingredients/${id}`);
