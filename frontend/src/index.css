@@ -20,9 +20,9 @@
     --color-danger: #e01e0f; /*#e3170a;*/ /*#c0392b;*/ /* Danger messages */
 
     /* Icon backgrounds for unit types */
-    --color-unit-weight: #7a4e33; /* crust brown */
+    --color-unit-weight: #70191b; /*#7a4e33;  crust brown */
     --color-unit-volume: #365f7a; /* dusty blue */
-    --color-unit-count: #5c534d; /* warm stone */
+    --color-unit-count: #758f00; /*#85a300;   warm stone */
 }
 
 :root {

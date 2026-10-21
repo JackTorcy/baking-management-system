@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pencil, Trash, Plus, Search } from "lucide-react";
+import { Pencil, Trash, Plus, Search, Link2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { formatUnitPrice, pricePer, unitLabel, type ExistingIngredient } from "../types/Ingredient";
@@ -102,12 +102,19 @@ function IngredientsList() {
                             <div className="grid sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
                                 {ingredients.map((i) => (
                                     <div
-                                        className="bg-surface border rounded-2xl p-4 border-border"
+                                        onClick={() => handleEdit(i.id)}
+                                        className="bg-surface border rounded-2xl p-4 border-border cursor-pointer"
                                         key={i.id}
                                     >
                                         <div className="flex flex-col">
-                                            <div className="mb-3 text-xl font-bold text-header truncate">
+                                            <div className="mb-1 text-xl font-bold text-header truncate">
                                                 {i.name}
+                                            </div>
+                                            <div className="flex mb-3" hidden={!i.isUsedInRecipe}>
+                                                <div className="flex text-xs px-2 rounded-full text-header bg-background">
+                                                    <Link2 className="w-4 h-4 mr-1" /> Used in
+                                                    recipe
+                                                </div>
                                             </div>
                                             <div className="flex">
                                                 <div className="mr-2">
@@ -124,25 +131,6 @@ function IngredientsList() {
                                                         per{" "}
                                                         {unitLabel[i.ingredientUnit] ||
                                                             i.ingredientUnit}
-                                                    </div>
-                                                </div>
-                                                <div className="ml-auto">
-                                                    <div className="space-x-2">
-                                                        <button
-                                                            type="button"
-                                                            className="rounded-full p-2 border border-border bg-gray-50 hover:bg-secondary"
-                                                            onClick={() => handleEdit(i.id)}
-                                                        >
-                                                            <Pencil className="text-header"></Pencil>
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            className="rounded-full p-2 border border-border bg-gray-50 hover:bg-danger disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-50"
-                                                            disabled={i.isUsedInRecipe}
-                                                            onClick={() => deleteIngredient(i.id)}
-                                                        >
-                                                            <Trash className="text-header"></Trash>
-                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>

@@ -33,6 +33,7 @@ function IngredientDetails() {
     });
     const [lockedKind, setLockedKind] = useState<UnitKind | null>(null);
     const unitOptions = lockedKind ? unitsOfKind(lockedKind) : ingredientUnits;
+    const isUsedInRecipe = lockedKind !== null;
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const validate = () => {
@@ -105,6 +106,19 @@ function IngredientDetails() {
 
         loadIngredient();
     }, [id, isEditing]);
+
+    const deleteIngredient = async () => {
+        console.log("delete ingredient");
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients/${id}`, {
+            method: "DELETE",
+        });
+        if (res.ok) {
+            navigate("/ingredients");
+            return;
+        } else {
+            console.error("delete failed: ", res.status);
+        }
+    };
 
     const handleSubmit = async () => {
         if (!validate()) return;
@@ -237,11 +251,20 @@ function IngredientDetails() {
                     </>
                 )}
             </div>
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+                <button
+                    type="button"
+                    hidden={!isEditing}
+                    disabled={isEditing && isUsedInRecipe}
+                    onClick={deleteIngredient}
+                    className="border-2 flex min-w-40 min-h-8 items-center justify-center border-border text-header rounded-2xl py-1 px-3 bg-danger hover:bg-primary-dark disabled:bg-surface disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-50"
+                >
+                    Delete Ingredient
+                </button>
                 <button
                     type="button"
                     disabled={submitting}
-                    className="border flex min-w-40 min-h-8 items-center justify-center border-border text-header rounded-2xl py-1 px-3 bg-primary hover:bg-primary-dark"
+                    className="border-2 flex min-w-40 min-h-8 items-center justify-center border-primary text-header rounded-2xl py-1 px-3 bg-surface hover:bg-primary-dark"
                     onClick={() => handleSubmit()}
                 >
                     {submitting ? <LoadingSpinner className="w-4 h-4" /> : buttonLabel}
