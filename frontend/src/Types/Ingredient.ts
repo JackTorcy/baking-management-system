@@ -8,6 +8,16 @@ export const ingredientUnits: IngredientUnit[] = [
     "item",
 ];
 
+export type UnitKind = "weight" | "volume" | "count";
+
+export const unitKind: Record<IngredientUnit, UnitKind> = {
+    kilogram: "weight",
+    gram: "weight",
+    millilitre: "volume",
+    litre: "volume",
+    item: "count",
+};
+
 export const unitLabel: Record<string, string> = {
     kilogram: "kg",
     gram: "g",

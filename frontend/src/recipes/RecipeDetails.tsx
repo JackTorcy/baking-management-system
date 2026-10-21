@@ -181,13 +181,13 @@ function RecipeDetails() {
 
             {/* ----- Page content ------ */}
             {/* Title Part, Back arrow */}
-            <div className="flex mb-4 items-center justify-between">
+            <div className="flex mb-4 items-center justify-between text-header">
                 <div className="flex gap-3 items-center">
                     <Link to="/recipes">
                         <ArrowLeft className="h-8 w-8" />
                     </Link>
 
-                    <div className="text-4xl font-semibold">{buttonLabel}</div>
+                    <div className="text-4xl font-semibold tracking-tight">{buttonLabel}</div>
                 </div>
                 <div hidden={isNew} className="flex gap-3 items-center">
                     <button

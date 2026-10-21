@@ -18,6 +18,11 @@
     --color-success: #4a8b5c; /* Success messages */
     --color-warning: #f59e0b; /* Warning messages */
     --color-danger: #e01e0f; /*#e3170a;*/ /*#c0392b;*/ /* Danger messages */
+
+    /* Icon backgrounds for unit types */
+    --color-unit-weight: #7a4e33; /* crust brown */
+    --color-unit-volume: #365f7a; /* dusty blue */
+    --color-unit-count: #5c534d; /* warm stone */
 }
 
 :root {

@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { Pencil, Trash, Plus, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
-import type { ExistingIngredient } from "../types/Ingredient";
+import { type ExistingIngredient } from "../types/Ingredient";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import PageTitle from "../components/ui/PageTitle";
 import { useAuth } from "../auth/AuthContext";
+import UnitBadge from "../components/ui/UnitBadge";
 
 function IngredientsList() {
     const [ingredients, setIngredients] = useState<ExistingIngredient[]>([]);
@@ -98,34 +99,47 @@ function IngredientsList() {
                                 ingredient.
                             </div>
                         ) : (
-                            <div>
+                            <div className="grid sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
                                 {ingredients.map((i) => (
                                     <div
-                                        className="w-full mb-2 bg-surface border rounded-2xl p-4 border-border"
+                                        className="bg-surface border rounded-2xl p-4 border-border"
                                         key={i.id}
                                     >
-                                        <div className="flex justify-between mb-2">
-                                            <div>{i.name}</div>
-                                            <div className="space-x-2">
-                                                <button
-                                                    type="button"
-                                                    className="rounded-full p-2 border border-border bg-gray-50 hover:bg-secondary"
-                                                    onClick={() => handleEdit(i.id)}
-                                                >
-                                                    <Pencil className="text-header"></Pencil>
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="rounded-full p-2 border border-border bg-gray-50 hover:bg-danger disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-50"
-                                                    disabled={i.isUsedInRecipe}
-                                                    onClick={() => deleteIngredient(i.id)}
-                                                >
-                                                    <Trash className="text-header"></Trash>
-                                                </button>
+                                        <div className="flex flex-col">
+                                            <div className="mb-3 text-xl font-bold text-header truncate">
+                                                {i.name}
                                             </div>
-                                        </div>
-                                        <div>
-                                            £{i.price} per {i.ingredientUnit}
+                                            <div className="flex">
+                                                <div className="mr-2">
+                                                    <UnitBadge unit={i.ingredientUnit} />
+                                                </div>
+                                                {/*  */}
+                                                <div className="flex flex-col">
+                                                    <div className="font-bold text-2xl tracking-tight">
+                                                        £{i.price}
+                                                    </div>
+                                                    <div>per {i.ingredientUnit}</div>
+                                                </div>
+                                                <div className="ml-auto">
+                                                    <div className="space-x-2">
+                                                        <button
+                                                            type="button"
+                                                            className="rounded-full p-2 border border-border bg-gray-50 hover:bg-secondary"
+                                                            onClick={() => handleEdit(i.id)}
+                                                        >
+                                                            <Pencil className="text-header"></Pencil>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="rounded-full p-2 border border-border bg-gray-50 hover:bg-danger disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-50"
+                                                            disabled={i.isUsedInRecipe}
+                                                            onClick={() => deleteIngredient(i.id)}
+                                                        >
+                                                            <Trash className="text-header"></Trash>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
