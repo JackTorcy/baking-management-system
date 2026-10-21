@@ -107,7 +107,7 @@ namespace api_app.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Bakeries");
+                    b.ToTable("Bakeries", (string)null);
                 });
 
             modelBuilder.Entity("Ingredient", b =>
@@ -134,6 +134,9 @@ namespace api_app.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<decimal>("PackSize")
+                        .HasColumnType("numeric(15,4)");
+
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric(15,8)");
 
@@ -141,7 +144,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("BakeryId");
 
-                    b.ToTable("Ingredients");
+                    b.ToTable("Ingredients", (string)null);
                 });
 
             modelBuilder.Entity("IngredientIngredientTag", b =>
@@ -156,7 +159,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("UsedInIngredientsId");
 
-                    b.ToTable("IngredientIngredientTag");
+                    b.ToTable("IngredientIngredientTag", (string)null);
                 });
 
             modelBuilder.Entity("IngredientTag", b =>
@@ -178,7 +181,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("BakeryId");
 
-                    b.ToTable("IngredientTags");
+                    b.ToTable("IngredientTags", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -345,7 +348,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("BakeryId");
 
-                    b.ToTable("Recipes");
+                    b.ToTable("Recipes", (string)null);
                 });
 
             modelBuilder.Entity("RecipeComponent", b =>
@@ -368,7 +371,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("ParentRecipeId");
 
-                    b.ToTable("RecipeComponents");
+                    b.ToTable("RecipeComponents", (string)null);
                 });
 
             modelBuilder.Entity("RecipeIngredient", b =>
@@ -388,13 +391,16 @@ namespace api_app.Migrations
                     b.Property<int>("RecipeId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Unit")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("IngredientId");
 
                     b.HasIndex("RecipeId");
 
-                    b.ToTable("RecipeIngredients");
+                    b.ToTable("RecipeIngredients", (string)null);
                 });
 
             modelBuilder.Entity("RecipeRecipeTag", b =>
@@ -409,7 +415,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("UsedInRecipesId");
 
-                    b.ToTable("RecipeRecipeTag");
+                    b.ToTable("RecipeRecipeTag", (string)null);
                 });
 
             modelBuilder.Entity("RecipeTag", b =>
@@ -431,7 +437,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("BakeryId");
 
-                    b.ToTable("RecipeTags");
+                    b.ToTable("RecipeTags", (string)null);
                 });
 
             modelBuilder.Entity("AppUser", b =>

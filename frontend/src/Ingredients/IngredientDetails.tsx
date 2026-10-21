@@ -1,9 +1,17 @@
 import { useNavigate, useParams } from "react-router-dom";
 import {
+    baseUnit,
+    formatUnitPrice,
     ingredientUnits,
+    maxUnitPrice,
+    pricePer,
+    unitKind,
+    unitLabel,
+    unitsOfKind,
     type ExistingIngredient,
     type IngredientUnit,
     type NewIngredient,
+    type UnitKind,
 } from "../types/Ingredient";
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
@@ -20,8 +28,11 @@ function IngredientDetails() {
     const [ingredient, setIngredient] = useState<NewIngredient>({
         name: "",
         price: "",
-        ingredientUnit: "gram",
+        packSize: "1",
+        ingredientUnit: "kilogram",
     });
+    const [lockedKind, setLockedKind] = useState<UnitKind | null>(null);
+    const unitOptions = lockedKind ? unitsOfKind(lockedKind) : ingredientUnits;
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const validate = () => {
@@ -37,8 +48,30 @@ function IngredientDetails() {
             newErrors.price = "Price must be a number";
         } else if (Number(ingredient.price) <= 0) {
             newErrors.price = "Price must be greater than 0";
-        } else if (ingredient.price && !/^\d*\.?\d{0,8}$/.test(ingredient.price)) {
-            newErrors.price = "Price must not have more than 8 decimal places";
+        } else if (ingredient.price && !/^\d*\.?\d{0,4}$/.test(ingredient.price)) {
+            newErrors.price = "Price must not have more than 4 decimal places";
+        }
+
+        if (!ingredient.packSize.trim()) {
+            newErrors.packSize = "Pack size is required";
+        } else if (isNaN(Number(ingredient.packSize)) || ingredient.packSize.endsWith(".")) {
+            newErrors.packSize = "Pack size must be a number";
+        } else if (Number(ingredient.packSize) <= 0) {
+            newErrors.packSize = "Pack size must be greater than 0";
+        } else if (!/^\d*\.?\d{0,4}$/.test(ingredient.packSize)) {
+            newErrors.packSize = "Pack size must not have more than 4 decimal places";
+        }
+
+        const unitPrice = pricePer(ingredient, ingredient.ingredientUnit);
+        if (!newErrors.price && !newErrors.packSize && unitPrice > maxUnitPrice) {
+            const unit = ingredient.ingredientUnit;
+            const smallerUnit = baseUnit[unitKind[unit]];
+            newErrors.price =
+                `That's ${formatUnitPrice(unitPrice)} per ${unitLabel[unit] || unit}. ` +
+                `Prices over ${formatUnitPrice(maxUnitPrice)} per unit are usually a typo` +
+                (smallerUnit !== unit
+                    ? `, or try entering it per ${unitLabel[smallerUnit]}.`
+                    : ".");
         }
 
         setErrors(newErrors);
@@ -58,8 +91,10 @@ function IngredientDetails() {
                 setIngredient({
                     name: data.name,
                     price: data.price,
+                    packSize: data.packSize,
                     ingredientUnit: data.ingredientUnit,
                 });
+                if (data.isUsedInRecipe) setLockedKind(unitKind[data.ingredientUnit]);
             } catch (err) {
                 console.error(err);
                 setLoadFailed(true);
@@ -128,30 +163,47 @@ function IngredientDetails() {
                     {errors.name && <span className="text-danger text-sm">{errors.name}</span>}
                 </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label htmlFor="ingredientPrice" className="block mb-2">
-                        Ingredient Price (per unit)
-                    </label>
+            <div className="mb-2">
+                <label htmlFor="ingredientPrice" className="block mb-2">
+                    What did you pay?
+                </label>
+                <div className="flex items-center gap-2">
+                    <div className="relative w-38">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2">£</span>
+                        <input
+                            id="ingredientPrice"
+                            type="text"
+                            inputMode="decimal"
+                            placeholder="1.35"
+                            className="border border-border bg-surface w-full rounded-2xl py-2 pl-8 pr-4"
+                            value={ingredient.price}
+                            onChange={(e) => {
+                                if (/^\d*\.?\d{0,4}$/.test(e.target.value))
+                                    setIngredient((prev) => ({
+                                        ...prev,
+                                        price: e.target.value,
+                                    }));
+                            }}
+                        />
+                    </div>
+                    <span>for</span>
                     <input
-                        id="ingredientPrice"
+                        aria-label="Amount bought"
                         type="text"
-                        className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
-                        value={ingredient.price}
+                        inputMode="decimal"
+                        className="border border-border bg-surface w-20 shrink-0 rounded-2xl py-2 px-3 text-right"
+                        value={ingredient.packSize}
                         onChange={(e) =>
                             setIngredient((prev) => ({
                                 ...prev,
-                                price: e.target.value,
+                                packSize: e.target.value,
                             }))
                         }
                     />
-                    {errors.price && <span className="text-danger text-sm">{errors.price}</span>}
-                </div>
-                <div>
-                    <label className="block mb-2">Unit</label>
                     <select
+                        aria-label="Unit"
                         value={ingredient.ingredientUnit}
-                        className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
+                        className="border border-border bg-surface shrink-0 rounded-2xl py-2 px-3"
                         onChange={(e) =>
                             setIngredient((prev) => ({
                                 ...prev,
@@ -159,13 +211,31 @@ function IngredientDetails() {
                             }))
                         }
                     >
-                        {ingredientUnits.map((unit) => (
+                        {unitOptions.map((unit) => (
                             <option key={unit} value={unit}>
-                                {unit}
+                                {unitLabel[unit] || "items"}
                             </option>
                         ))}
                     </select>
                 </div>
+                {errors.price && <div className="text-danger text-sm">{errors.price}</div>}
+                {errors.packSize && <div className="text-danger text-sm">{errors.packSize}</div>}
+                {lockedKind && (
+                    <div className="text-sm">
+                        Used in recipes, so only {lockedKind} units are available
+                    </div>
+                )}
+            </div>
+            <div className="mb-4 text-sm min-h-5">
+                {Number(ingredient.price) > 0 && Number(ingredient.packSize) > 0 && (
+                    <>
+                        That's{" "}
+                        <span className="font-semibold text-header">
+                            {formatUnitPrice(pricePer(ingredient, ingredient.ingredientUnit))}
+                        </span>{" "}
+                        per {unitLabel[ingredient.ingredientUnit] || ingredient.ingredientUnit}
+                    </>
+                )}
             </div>
             <div className="flex justify-end">
                 <button

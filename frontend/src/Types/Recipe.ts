@@ -1,3 +1,5 @@
+import type { IngredientUnit } from "./Ingredient";
+
 export interface NewRecipe {
     name: string;
     price: string;
@@ -12,4 +14,5 @@ export interface ExistingRecipe extends NewRecipe {
 export interface RecipeIngredient {
     ingredientId: number;
     quantity: string;
+    unit: IngredientUnit;
 }

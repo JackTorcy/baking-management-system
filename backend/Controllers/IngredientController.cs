@@ -40,6 +40,9 @@ public class IngredientController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<IngredientResponse>> UpdateIngredient(int id, SaveIngredient dto)
     {
+        if (!await _service.UnitChangeAllowedAsync(id, dto.IngredientUnit))
+            return BadRequest("Can't switch between weight, volume and count while recipes use this ingredient");
+
         var ingredient = await _service.UpdateAsync(id, dto);
         if (ingredient == null)
             return NotFound();

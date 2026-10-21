@@ -32,6 +32,8 @@ public class RecipeController : ControllerBase
     {
         if (!await _service.IngredientsExistAsync(dto.Ingredients))
             return BadRequest("One or more ingredients don't exist");
+        if (!await _service.UnitsMatchIngredientsAsync(dto.Ingredients))
+            return BadRequest("Each ingredient's unit must match how that ingredient is measured");
 
         var recipe = await _service.CreateAsync(dto);
         if (recipe == null)
@@ -45,6 +47,8 @@ public class RecipeController : ControllerBase
     {
         if (!await _service.IngredientsExistAsync(dto.Ingredients))
             return BadRequest("One or more ingredients don't exist");
+        if (!await _service.UnitsMatchIngredientsAsync(dto.Ingredients))
+            return BadRequest("Each ingredient's unit must match how that ingredient is measured");
 
         var recipe = await _service.UpdateAsync(id, dto);
         if (recipe == null)

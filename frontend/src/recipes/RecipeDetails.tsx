@@ -3,7 +3,15 @@ import LoadingSpinner from "../components/ui/LoadingSpinner";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import SubTitle from "../components/ui/SubTitle";
 import type { ExistingRecipe, NewRecipe } from "../types/Recipe";
-import { unitLabel, type ExistingIngredient } from "../types/Ingredient";
+import {
+    baseUnit,
+    pricePer,
+    unitKind,
+    unitLabel,
+    unitsOfKind,
+    type ExistingIngredient,
+    type IngredientUnit,
+} from "../types/Ingredient";
 import { ArrowLeft, Edit, Trash, X } from "lucide-react";
 
 function RecipeDetails() {
@@ -26,7 +34,8 @@ function RecipeDetails() {
 
     const ingredientCost = recipe.ingredients.reduce((total, ri) => {
         const ingredient = allIngredients.find((i) => i.id === ri.ingredientId);
-        return total + Number(ri.quantity) * Number(ingredient?.price ?? 0);
+        if (!ingredient) return total;
+        return total + Number(ri.quantity) * pricePer(ingredient, ri.unit);
     }, 0);
 
     useEffect(() => {
@@ -133,10 +142,18 @@ function RecipeDetails() {
     };
 
     const addIngredientToRecipe = (id: number) => {
-        if (recipe.ingredients.some((ri) => ri.ingredientId === id)) return;
+        const ingredient = allIngredients.find((i) => i.id === id);
+        if (!ingredient || recipe.ingredients.some((ri) => ri.ingredientId === id)) return;
         setRecipe({
             ...recipe,
-            ingredients: [...recipe.ingredients, { ingredientId: id, quantity: "" }],
+            ingredients: [
+                ...recipe.ingredients,
+                {
+                    ingredientId: id,
+                    quantity: "",
+                    unit: baseUnit[unitKind[ingredient.ingredientUnit]],
+                },
+            ],
         });
     };
 
@@ -152,6 +169,15 @@ function RecipeDetails() {
             ...prev,
             ingredients: prev.ingredients.map((ri) =>
                 ri.ingredientId === id ? { ...ri, quantity } : ri,
+            ),
+        }));
+    };
+
+    const updateIngredientUnit = (id: number, unit: IngredientUnit) => {
+        setRecipe((prev) => ({
+            ...prev,
+            ingredients: prev.ingredients.map((ri) =>
+                ri.ingredientId === id ? { ...ri, unit } : ri,
             ),
         }));
     };
@@ -311,6 +337,7 @@ function RecipeDetails() {
                                 const ingredient = allIngredients.find(
                                     (i) => i.id === ri.ingredientId,
                                 );
+                                const unitOptions = unitsOfKind(unitKind[ri.unit]);
                                 return (
                                     <div key={ri.ingredientId} className="flex items-center gap-2">
                                         {editMode ? (
@@ -329,7 +356,7 @@ function RecipeDetails() {
                                             //     {unitLabel[ingredient?.ingredientUnit ?? ""] ??
                                             //         ingredient?.ingredientUnit}
                                             // </span>
-                                            <label className="flex w-20 shrink-0 items-center rounded-lg border border-border/70 bg-background px-2 py-0.5 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+                                            <label className="flex w-28 shrink-0 items-center rounded-lg border border-border/70 bg-background px-2 py-0.5 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
                                                 <input
                                                     inputMode="decimal"
                                                     aria-label={`Quantity of ${ingredient?.name}`}
@@ -343,16 +370,34 @@ function RecipeDetails() {
                                                             );
                                                     }}
                                                 />
-                                                <span className="ml-1 text-sm text-body/70">
-                                                    {unitLabel[ingredient?.ingredientUnit ?? ""] ??
-                                                        ingredient?.ingredientUnit}
-                                                </span>
+                                                {unitOptions.length > 1 ? (
+                                                    <select
+                                                        aria-label={`Unit for ${ingredient?.name}`}
+                                                        className="ml-1 bg-transparent text-sm text-body/70 outline-none"
+                                                        value={ri.unit}
+                                                        onChange={(e) =>
+                                                            updateIngredientUnit(
+                                                                ri.ingredientId,
+                                                                e.target.value as IngredientUnit,
+                                                            )
+                                                        }
+                                                    >
+                                                        {unitOptions.map((unit) => (
+                                                            <option key={unit} value={unit}>
+                                                                {unitLabel[unit]}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+                                                    <span className="ml-1 text-sm text-body/70">
+                                                        {unitLabel[ri.unit]}
+                                                    </span>
+                                                )}
                                             </label>
                                         ) : (
                                             <span className="w-14 shrink-0 text-right tabular-nums font-medium text-header">
                                                 {ri.quantity}
-                                                {unitLabel[ingredient?.ingredientUnit ?? ""] ??
-                                                    ingredient?.ingredientUnit}
+                                                {unitLabel[ri.unit]}
                                             </span>
                                         )}
 

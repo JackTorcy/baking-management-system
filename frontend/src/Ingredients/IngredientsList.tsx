@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Trash, Plus, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { type ExistingIngredient } from "../types/Ingredient";
+import { formatUnitPrice, pricePer, unitLabel, type ExistingIngredient } from "../types/Ingredient";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import PageTitle from "../components/ui/PageTitle";
 import { useAuth } from "../auth/AuthContext";
@@ -116,9 +116,15 @@ function IngredientsList() {
                                                 {/*  */}
                                                 <div className="flex flex-col">
                                                     <div className="font-bold text-2xl tracking-tight">
-                                                        £{i.price}
+                                                        {formatUnitPrice(
+                                                            pricePer(i, i.ingredientUnit),
+                                                        )}
                                                     </div>
-                                                    <div>per {i.ingredientUnit}</div>
+                                                    <div>
+                                                        per{" "}
+                                                        {unitLabel[i.ingredientUnit] ||
+                                                            i.ingredientUnit}
+                                                    </div>
                                                 </div>
                                                 <div className="ml-auto">
                                                     <div className="space-x-2">

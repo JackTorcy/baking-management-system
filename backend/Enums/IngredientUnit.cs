@@ -6,3 +6,21 @@ public enum IngredientUnit
     litre = 4,
     item = 5
 }
+
+public enum UnitKind
+{
+    Weight,
+    Volume,
+    Count
+}
+
+public static class IngredientUnitExtensions
+{
+    public static UnitKind Kind(this IngredientUnit unit) => unit switch
+    {
+        IngredientUnit.kilogram or IngredientUnit.gram => UnitKind.Weight,
+        IngredientUnit.millilitre or IngredientUnit.litre => UnitKind.Volume,
+        IngredientUnit.item => UnitKind.Count,
+        _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, null)
+    };
+}

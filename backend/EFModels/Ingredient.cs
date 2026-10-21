@@ -7,6 +7,9 @@ public class Ingredient : IBakeryOwned
 
     [Column(TypeName = "numeric(15,8)")]
     public decimal Price { get; set; }
+
+    [Column(TypeName = "numeric(15,4)")]
+    public decimal PackSize { get; set; } = 1;
     public IngredientUnit IngredientUnit { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? DeletedAt { get; set; }

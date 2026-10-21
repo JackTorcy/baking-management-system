@@ -8,6 +8,7 @@ public interface IIngredientService
     Task<IngredientResponse> CreateAsync(SaveIngredient dto);
     Task<bool> DeleteAsync(int id);
     Task<IngredientResponse?> UpdateAsync(int id, SaveIngredient dto);
+    Task<bool> UnitChangeAllowedAsync(int id, IngredientUnit newUnit);
 }
 
 public class IngredientService : IIngredientService
@@ -47,6 +48,7 @@ public class IngredientService : IIngredientService
         {
             Name = dto.Name,
             Price = decimal.Parse(dto.Price),
+            PackSize = decimal.Parse(dto.PackSize),
             IngredientUnit = dto.IngredientUnit
         };
 
@@ -63,12 +65,22 @@ public class IngredientService : IIngredientService
 
         ingredient.Name = dto.Name;
         ingredient.Price = decimal.Parse(dto.Price);
+        ingredient.PackSize = decimal.Parse(dto.PackSize);
         ingredient.IngredientUnit = dto.IngredientUnit;
 
         await _db.SaveChangesAsync();
 
         var isUsed = await _db.RecipeIngredients.AnyAsync(ri => ri.IngredientId == id);
         return ToResponse(ingredient, isUsed);
+    }
+
+    // Recipe quantities are stored in a unit of the same kind, so switching kind (e.g. g to ml) would corrupt them
+    public async Task<bool> UnitChangeAllowedAsync(int id, IngredientUnit newUnit)
+    {
+        var ingredient = await _db.Ingredients.FindAsync(id);
+        if (ingredient == null || ingredient.IngredientUnit.Kind() == newUnit.Kind()) return true;
+
+        return !await _db.RecipeIngredients.AnyAsync(ri => ri.IngredientId == id);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -91,7 +103,8 @@ public class IngredientService : IIngredientService
         {
             Id = i.Id,
             Name = i.Name,
-            Price = i.Price.ToString("0.########"),        
+            Price = i.Price.ToString("0.00######"),
+            PackSize = i.PackSize.ToString("0.####"),
             IngredientUnit = i.IngredientUnit,
             isUsedInRecipe = isUsedInRecipe
         };

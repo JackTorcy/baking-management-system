@@ -8,6 +8,7 @@ public interface IRecipeService
     Task<bool> DeleteAsync(int id);
     Task<RecipeResponse?> UpdateAsync(int id, SaveRecipe dto);
     Task<bool> IngredientsExistAsync(List<RecipeIngredientDto> ingredients);
+    Task<bool> UnitsMatchIngredientsAsync(List<RecipeIngredientDto> ingredients);
 }
 
 public class RecipeService : IRecipeService
@@ -53,6 +54,7 @@ public class RecipeService : IRecipeService
             {
                 IngredientId = i.IngredientId,
                 Quantity = i.Quantity,
+                Unit = i.Unit,
             })
             .ToList();
 
@@ -83,10 +85,18 @@ public class RecipeService : IRecipeService
                 ri.IngredientId == i.IngredientId
             );
             if (existing != null)
+            {
                 existing.Quantity = i.Quantity;
+                existing.Unit = i.Unit;
+            }
             else
                 recipe.Ingredients.Add(
-                    new RecipeIngredient { IngredientId = i.IngredientId, Quantity = i.Quantity }
+                    new RecipeIngredient
+                    {
+                        IngredientId = i.IngredientId,
+                        Quantity = i.Quantity,
+                        Unit = i.Unit,
+                    }
                 );
         }
 
@@ -118,6 +128,7 @@ public class RecipeService : IRecipeService
                 {
                     IngredientId = i.IngredientId,
                     Quantity = i.Quantity,
+                    Unit = i.Unit,
                 })
                 .ToList(),
         };
@@ -127,5 +138,17 @@ public class RecipeService : IRecipeService
         var ids = ingredients.Select(i => i.IngredientId).Distinct().ToList();
         var found = await _db.Ingredients.CountAsync(i => ids.Contains(i.Id));
         return found == ids.Count;
+    }
+
+    public async Task<bool> UnitsMatchIngredientsAsync(List<RecipeIngredientDto> ingredients)
+    {
+        var ids = ingredients.Select(i => i.IngredientId).Distinct().ToList();
+        var units = await _db
+            .Ingredients.Where(i => ids.Contains(i.Id))
+            .ToDictionaryAsync(i => i.Id, i => i.IngredientUnit);
+
+        return ingredients.All(ri =>
+            units.TryGetValue(ri.IngredientId, out var unit) && unit.Kind() == ri.Unit.Kind()
+        );
     }
 }
