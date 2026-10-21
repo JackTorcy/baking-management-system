@@ -141,6 +141,18 @@ function RecipeDetails() {
         }
     };
 
+    const deleteRecipe = async () => {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/${id}`, {
+            method: "DELETE",
+        });
+        if (res.ok) {
+            navigate("/recipes");
+            return;
+        } else {
+            console.error("delete failed: ", res.status);
+        }
+    };
+
     const addIngredientToRecipe = (id: number) => {
         const ingredient = allIngredients.find((i) => i.id === id);
         if (!ingredient || recipe.ingredients.some((ri) => ri.ingredientId === id)) return;
@@ -226,6 +238,7 @@ function RecipeDetails() {
                     <button
                         type="button"
                         className="text-header rounded-4xl p-2 bg-primary hover:bg-primary-dark"
+                        onClick={deleteRecipe}
                     >
                         <Trash className="w-6 h-6"></Trash>
                     </button>
@@ -234,7 +247,7 @@ function RecipeDetails() {
 
             {/* Summary (Name, Total Price, Description) */}
             <div className="flex-1 overflow-y-auto">
-                <div className="border rounded-2xl flex flex-col max-h-80 p-2 my-4 bg-surface">
+                <div className="border border-border/30 rounded-2xl flex flex-col max-h-80 p-2 my-4 bg-surface grid">
                     <SubTitle title="Summary"></SubTitle>
                     <div className="flex mb-3 gap-3 items-center">
                         <label htmlFor="name">Name:</label>
@@ -328,14 +341,14 @@ function RecipeDetails() {
                 </div>
             </div> */}
 
-                <div className="border rounded-2xl flex flex-col max-h-80 p-2 my-4 bg-surface">
+                <div className="border border-border/30 rounded-2xl flex flex-col max-h-80 p-2 my-4 bg-surface">
                     <SubTitle title="Ingredients"></SubTitle>
                     {errors.ingredients && (
                         <span className="text-danger text-sm">{errors.ingredients}</span>
                     )}
                     <div className="flex-1 overflow-y-auto">
                         {recipe.ingredients.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 gap-x-4 mb-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-2 gap-x-4 mb-3">
                                 {recipe.ingredients.map((ri) => {
                                     const ingredient = allIngredients.find(
                                         (i) => i.id === ri.ingredientId,

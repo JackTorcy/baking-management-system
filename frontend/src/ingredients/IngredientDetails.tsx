@@ -108,7 +108,6 @@ function IngredientDetails() {
     }, [id, isEditing]);
 
     const deleteIngredient = async () => {
-        console.log("delete ingredient");
         const res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients/${id}`, {
             method: "DELETE",
         });

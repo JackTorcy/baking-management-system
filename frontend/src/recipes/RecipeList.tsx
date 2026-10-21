@@ -87,35 +87,46 @@ function RecipeList() {
                     </div>
                 ) : (
                     <div>
-                        {recipes.map((r) => (
+                        {recipes.length === 0 ? (
                             <div
-                                className="w-full mb-2 bg-surface border rounded-2xl p-4 border-border"
-                                key={r.id}
+                                role="status"
+                                className="mb-4 rounded-xl bg-secondary/10 px-4 py-3 text-secondary-dark"
                             >
-                                <div className="flex justify-between mb-2">
-                                    <div>{r.name}</div>
-                                    <div className="space-x-2">
-                                        <button
-                                            type="button"
-                                            className="rounded-full p-2 border border-border bg-gray-50 hover:bg-secondary"
-                                            onClick={() => handleEdit(r.id)}
-                                        >
-                                            <Pencil className="text-header"></Pencil>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="rounded-full p-2 border border-border bg-gray-50 hover:bg-danger"
-                                            onClick={() => deleteRecipe(r.id)}
-                                        >
-                                            <Trash className="text-header"></Trash>
-                                        </button>
-                                    </div>
-                                </div>
-                                {/* <div>
+                                Get started by adding your first recipe.
+                            </div>
+                        ) : (
+                            <div>
+                                {recipes.map((r) => (
+                                    <div
+                                        className="w-full mb-2 bg-surface border rounded-2xl p-4 border-border"
+                                        key={r.id}
+                                    >
+                                        <div className="flex justify-between mb-2">
+                                            <div>{r.name}</div>
+                                            <div className="space-x-2">
+                                                <button
+                                                    type="button"
+                                                    className="rounded-full p-2 border border-border bg-gray-50 hover:bg-secondary"
+                                                    onClick={() => handleEdit(r.id)}
+                                                >
+                                                    <Pencil className="text-header"></Pencil>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="rounded-full p-2 border border-border bg-gray-50 hover:bg-danger"
+                                                    onClick={() => deleteRecipe(r.id)}
+                                                >
+                                                    <Trash className="text-header"></Trash>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {/* <div>
                                     £{r.price} per {r.ingredientUnit}
                                 </div> */}
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        )}
                     </div>
                 )}
             </div>
