@@ -8,7 +8,10 @@ public interface IRecipeService
     Task<bool> DeleteAsync(int id);
     Task<RecipeResponse?> UpdateAsync(int id, SaveRecipe dto);
     Task<bool> IngredientsExistAsync(List<RecipeIngredientDto> ingredients);
+    Task<bool> ComponentsExistAsync(List<RecipeComponentDto> components);
     Task<bool> UnitsMatchIngredientsAsync(List<RecipeIngredientDto> ingredients);
+    Task<bool> CreatesLoopAsync(int id, List<RecipeComponentDto> components);
+    Task<bool> IsUsedAsComponentAsync(int id);
 }
 
 public class RecipeService : IRecipeService
@@ -24,6 +27,7 @@ public class RecipeService : IRecipeService
     {
         var recipes = await _db
             .Recipes.Include(r => r.Ingredients.OrderBy(ri => ri.Id))
+            .Include(r => r.Components.OrderBy(rc => rc.Id))
             .ToListAsync();
         return recipes.Select(ToResponse).ToList();
     }
@@ -32,6 +36,7 @@ public class RecipeService : IRecipeService
     {
         var recipe = await _db
             .Recipes.Include(r => r.Ingredients.OrderBy(ri => ri.Id))
+            .Include(r => r.Components.OrderBy(rc => rc.Id))
             .FirstOrDefaultAsync(r => r.Id == id);
 
         if (recipe == null)
@@ -58,6 +63,14 @@ public class RecipeService : IRecipeService
             })
             .ToList();
 
+        recipe.Components = dto
+            .Components.Select(c => new RecipeComponent
+            {
+                ComponentId = c.ComponentId,
+                Quantity = c.Quantity,
+            })
+            .ToList();
+
         _db.Recipes.Add(recipe);
         await _db.SaveChangesAsync();
         return ToResponse(recipe);
@@ -67,6 +80,7 @@ public class RecipeService : IRecipeService
     {
         var recipe = await _db
             .Recipes.Include(r => r.Ingredients)
+            .Include(r => r.Components)
             .FirstOrDefaultAsync(r => r.Id == id);
         if (recipe == null)
             return null;
@@ -100,6 +114,25 @@ public class RecipeService : IRecipeService
                 );
         }
 
+        recipe.Components.RemoveAll(rc =>
+            !dto.Components.Any(c => c.ComponentId == rc.ComponentId)
+        );
+
+        foreach (var c in dto.Components)
+        {
+            var existing = recipe.Components.FirstOrDefault(rc => rc.ComponentId == c.ComponentId);
+            if (existing != null)
+            {
+                existing.Quantity = c.Quantity;
+            }
+            else
+            {
+                recipe.Components.Add(
+                    new RecipeComponent { ComponentId = c.ComponentId, Quantity = c.Quantity }
+                );
+            }
+        }
+
         await _db.SaveChangesAsync();
         return ToResponse(recipe);
     }
@@ -131,12 +164,26 @@ public class RecipeService : IRecipeService
                     Unit = i.Unit,
                 })
                 .ToList(),
+            Components = r
+                .Components.Select(c => new RecipeComponentDto
+                {
+                    ComponentId = c.ComponentId,
+                    Quantity = c.Quantity,
+                })
+                .ToList(),
         };
 
     public async Task<bool> IngredientsExistAsync(List<RecipeIngredientDto> ingredients)
     {
         var ids = ingredients.Select(i => i.IngredientId).Distinct().ToList();
         var found = await _db.Ingredients.CountAsync(i => ids.Contains(i.Id));
+        return found == ids.Count;
+    }
+
+    public async Task<bool> ComponentsExistAsync(List<RecipeComponentDto> components)
+    {
+        var ids = components.Select(c => c.ComponentId).Distinct().ToList();
+        var found = await _db.Recipes.CountAsync(r => ids.Contains(r.Id));
         return found == ids.Count;
     }
 
@@ -151,4 +198,30 @@ public class RecipeService : IRecipeService
             units.TryGetValue(ri.IngredientId, out var unit) && unit.Kind() == ri.Unit.Kind()
         );
     }
+
+    public async Task<bool> CreatesLoopAsync(int recipeId, List<RecipeComponentDto> components)
+    {
+        var toVisit = new Queue<int>(components.Select(c => c.ComponentId));
+        var visited = new HashSet<int>();
+
+        while (toVisit.Count > 0)
+        {
+            var current = toVisit.Dequeue();
+            if (current == recipeId)
+                return true;
+            if (!visited.Add(current))
+                continue;
+
+            var children = await _db
+                .RecipeComponents.Where(rc => rc.RecipeId == current)
+                .Select(rc => rc.ComponentId)
+                .ToListAsync();
+            foreach (var child in children)
+                toVisit.Enqueue(child);
+        }
+        return false;
+    }
+
+    public async Task<bool> IsUsedAsComponentAsync(int id) =>
+        await _db.RecipeComponents.AnyAsync(rc => rc.ComponentId == id);
 }

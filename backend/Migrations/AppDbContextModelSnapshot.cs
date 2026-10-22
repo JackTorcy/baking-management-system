@@ -107,7 +107,7 @@ namespace api_app.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Bakeries", (string)null);
+                    b.ToTable("Bakeries");
                 });
 
             modelBuilder.Entity("Ingredient", b =>
@@ -144,7 +144,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("BakeryId");
 
-                    b.ToTable("Ingredients", (string)null);
+                    b.ToTable("Ingredients");
                 });
 
             modelBuilder.Entity("IngredientIngredientTag", b =>
@@ -159,7 +159,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("UsedInIngredientsId");
 
-                    b.ToTable("IngredientIngredientTag", (string)null);
+                    b.ToTable("IngredientIngredientTag");
                 });
 
             modelBuilder.Entity("IngredientTag", b =>
@@ -181,7 +181,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("BakeryId");
 
-                    b.ToTable("IngredientTags", (string)null);
+                    b.ToTable("IngredientTags");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -348,7 +348,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("BakeryId");
 
-                    b.ToTable("Recipes", (string)null);
+                    b.ToTable("Recipes");
                 });
 
             modelBuilder.Entity("RecipeComponent", b =>
@@ -359,19 +359,22 @@ namespace api_app.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ComponentRecipeId")
+                    b.Property<int>("ComponentId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("ParentRecipeId")
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("RecipeId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ComponentRecipeId");
+                    b.HasIndex("ComponentId");
 
-                    b.HasIndex("ParentRecipeId");
+                    b.HasIndex("RecipeId");
 
-                    b.ToTable("RecipeComponents", (string)null);
+                    b.ToTable("RecipeComponents");
                 });
 
             modelBuilder.Entity("RecipeIngredient", b =>
@@ -400,7 +403,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("RecipeId");
 
-                    b.ToTable("RecipeIngredients", (string)null);
+                    b.ToTable("RecipeIngredients");
                 });
 
             modelBuilder.Entity("RecipeRecipeTag", b =>
@@ -415,7 +418,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("UsedInRecipesId");
 
-                    b.ToTable("RecipeRecipeTag", (string)null);
+                    b.ToTable("RecipeRecipeTag");
                 });
 
             modelBuilder.Entity("RecipeTag", b =>
@@ -437,7 +440,7 @@ namespace api_app.Migrations
 
                     b.HasIndex("BakeryId");
 
-                    b.ToTable("RecipeTags", (string)null);
+                    b.ToTable("RecipeTags");
                 });
 
             modelBuilder.Entity("AppUser", b =>
@@ -552,21 +555,21 @@ namespace api_app.Migrations
 
             modelBuilder.Entity("RecipeComponent", b =>
                 {
-                    b.HasOne("Recipe", "ComponentRecipe")
+                    b.HasOne("Recipe", "Component")
                         .WithMany("UsedIn")
-                        .HasForeignKey("ComponentRecipeId")
+                        .HasForeignKey("ComponentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Recipe", "ParentRecipe")
+                    b.HasOne("Recipe", "Recipe")
                         .WithMany("Components")
-                        .HasForeignKey("ParentRecipeId")
+                        .HasForeignKey("RecipeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("ComponentRecipe");
+                    b.Navigation("Component");
 
-                    b.Navigation("ParentRecipe");
+                    b.Navigation("Recipe");
                 });
 
             modelBuilder.Entity("RecipeIngredient", b =>

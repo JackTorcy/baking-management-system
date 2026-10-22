@@ -32,6 +32,8 @@ public class RecipeController : ControllerBase
     {
         if (!await _service.IngredientsExistAsync(dto.Ingredients))
             return BadRequest("One or more ingredients don't exist");
+        if (!await _service.ComponentsExistAsync(dto.Components))
+            return BadRequest("One or more components don't exist");
         if (!await _service.UnitsMatchIngredientsAsync(dto.Ingredients))
             return BadRequest("Each ingredient's unit must match how that ingredient is measured");
 
@@ -47,8 +49,12 @@ public class RecipeController : ControllerBase
     {
         if (!await _service.IngredientsExistAsync(dto.Ingredients))
             return BadRequest("One or more ingredients don't exist");
+        if (!await _service.ComponentsExistAsync(dto.Components))
+            return BadRequest("One or more components don't exist");
         if (!await _service.UnitsMatchIngredientsAsync(dto.Ingredients))
             return BadRequest("Each ingredient's unit must match how that ingredient is measured");
+        if (await _service.CreatesLoopAsync(id, dto.Components))
+            return BadRequest("A recipe can't contain itself, directly or through another recipe");
 
         var recipe = await _service.UpdateAsync(id, dto);
         if (recipe == null)
@@ -60,6 +66,9 @@ public class RecipeController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteRecipe(int id)
     {
+        if (await _service.IsUsedAsComponentAsync(id))
+            return Conflict("This recipe is used in other recipes. Remove it from them first.");
+
         bool success = await _service.DeleteAsync(id);
         if (!success)
             return NotFound();

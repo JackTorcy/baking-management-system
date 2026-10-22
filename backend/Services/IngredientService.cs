@@ -14,7 +14,8 @@ public interface IIngredientService
 public class IngredientService : IIngredientService
 {
     private readonly AppDbContext _db;
-    public IngredientService(AppDbContext db) 
+
+    public IngredientService(AppDbContext db)
     {
         _db = db;
     }
@@ -23,20 +24,20 @@ public class IngredientService : IIngredientService
     {
         var ingredients = await _db.Ingredients.ToListAsync();
 
-        var usedIngredientIds = await _db.RecipeIngredients
-            .Select(ri => ri.IngredientId)
+        var usedIngredientIds = await _db
+            .RecipeIngredients.Select(ri => ri.IngredientId)
             .Distinct()
             .ToListAsync();
         var usedSet = usedIngredientIds.ToHashSet();
 
-        return ingredients
-            .Select(i => ToResponse(i, usedSet.Contains(i.Id))).ToList();
+        return ingredients.Select(i => ToResponse(i, usedSet.Contains(i.Id))).ToList();
     }
 
     public async Task<IngredientResponse?> GetAsync(int id)
     {
         var ingredient = await _db.Ingredients.FindAsync(id);
-        if (ingredient == null) return null;
+        if (ingredient == null)
+            return null;
 
         var isUsed = await _db.RecipeIngredients.AnyAsync(ri => ri.IngredientId == id);
         return ToResponse(ingredient, isUsed);
@@ -49,7 +50,7 @@ public class IngredientService : IIngredientService
             Name = dto.Name,
             Price = decimal.Parse(dto.Price),
             PackSize = decimal.Parse(dto.PackSize),
-            IngredientUnit = dto.IngredientUnit
+            IngredientUnit = dto.IngredientUnit,
         };
 
         _db.Ingredients.Add(ingredient);
@@ -61,7 +62,8 @@ public class IngredientService : IIngredientService
     public async Task<IngredientResponse?> UpdateAsync(int id, SaveIngredient dto)
     {
         var ingredient = await _db.Ingredients.FindAsync(id);
-        if (ingredient == null) return null;
+        if (ingredient == null)
+            return null;
 
         ingredient.Name = dto.Name;
         ingredient.Price = decimal.Parse(dto.Price);
@@ -78,7 +80,8 @@ public class IngredientService : IIngredientService
     public async Task<bool> UnitChangeAllowedAsync(int id, IngredientUnit newUnit)
     {
         var ingredient = await _db.Ingredients.FindAsync(id);
-        if (ingredient == null || ingredient.IngredientUnit.Kind() == newUnit.Kind()) return true;
+        if (ingredient == null || ingredient.IngredientUnit.Kind() == newUnit.Kind())
+            return true;
 
         return !await _db.RecipeIngredients.AnyAsync(ri => ri.IngredientId == id);
     }
@@ -86,10 +89,12 @@ public class IngredientService : IIngredientService
     public async Task<bool> DeleteAsync(int id)
     {
         var ingredient = await _db.Ingredients.FindAsync(id);
-        if (ingredient == null) return false;
+        if (ingredient == null)
+            return false;
 
         var isUsedInRecipe = await _db.RecipeIngredients.AnyAsync(ri => ri.IngredientId == id);
-        if (isUsedInRecipe) return false;
+        if (isUsedInRecipe)
+            return false;
 
         ingredient.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
@@ -97,7 +102,7 @@ public class IngredientService : IIngredientService
         return true;
     }
 
-    private static IngredientResponse ToResponse(Ingredient i, bool isUsedInRecipe) 
+    private static IngredientResponse ToResponse(Ingredient i, bool isUsedInRecipe)
     {
         return new()
         {
@@ -106,7 +111,7 @@ public class IngredientService : IIngredientService
             Price = i.Price.ToString("0.00######"),
             PackSize = i.PackSize.ToString("0.####"),
             IngredientUnit = i.IngredientUnit,
-            isUsedInRecipe = isUsedInRecipe
+            isUsedInRecipe = isUsedInRecipe,
         };
     }
 }

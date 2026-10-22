@@ -5,4 +5,5 @@ public class RecipeResponse
     public string Price { get; set; } = "";
     public string Description { get; set; } = "";
     public List<RecipeIngredientDto> Ingredients { get; set; } = new();
+    public List<RecipeComponentDto> Components { get; set; } = new();
 }

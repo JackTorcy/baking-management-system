@@ -247,7 +247,7 @@ function RecipeDetails() {
 
             {/* Summary (Name, Total Price, Description) */}
             <div className="flex-1 overflow-y-auto">
-                <div className="border border-border/30 rounded-2xl flex flex-col max-h-80 p-2 my-4 bg-surface grid">
+                <div className="border border-border/30 rounded-2xl flex flex-col max-h-80 p-2 my-4 bg-surface ">
                     <SubTitle title="Summary"></SubTitle>
                     <div className="flex mb-3 gap-3 items-center">
                         <label htmlFor="name">Name:</label>

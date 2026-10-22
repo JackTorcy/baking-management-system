@@ -1,9 +1,9 @@
 public class RecipeComponent
 {
     public int Id { get; set; }
-    public int ParentRecipeId { get; set; }
-    public Recipe ParentRecipe { get; set; } = null!;
-    public int ComponentRecipeId { get; set; }
-    public Recipe ComponentRecipe { get; set; } = null!;
-    //not sure whether we need quantity and unittype here
+    public int RecipeId { get; set; }
+    public Recipe Recipe { get; set; } = null!;
+    public int ComponentId { get; set; }
+    public Recipe Component { get; set; } = null!;
+    public decimal Quantity { get; set; }
 }

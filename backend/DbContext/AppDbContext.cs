@@ -44,16 +44,16 @@ public class AppDbContext : IdentityDbContext<AppUser>
         // Recipe ↔ Recipe (self-referencing — needs explicit FK mapping)
         modelBuilder
             .Entity<RecipeComponent>()
-            .HasOne(rc => rc.ParentRecipe)
+            .HasOne(rc => rc.Recipe)
             .WithMany(r => r.Components)
-            .HasForeignKey(rc => rc.ParentRecipeId)
+            .HasForeignKey(rc => rc.RecipeId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder
             .Entity<RecipeComponent>()
-            .HasOne(rc => rc.ComponentRecipe)
+            .HasOne(rc => rc.Component)
             .WithMany(r => r.UsedIn)
-            .HasForeignKey(rc => rc.ComponentRecipeId)
+            .HasForeignKey(rc => rc.ComponentId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // Recipe ↔ Ingredient (standard — EF can mostly infer this, but explicit is clear)
@@ -68,6 +68,10 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasOne(ri => ri.Ingredient)
             .WithMany(i => i.UsedInRecipes)
             .HasForeignKey(ri => ri.IngredientId);
+
+        //Dont include a recipes components or ingredients on recipes that are deleted
+        modelBuilder.Entity<RecipeIngredient>().HasQueryFilter(ri => ri.Recipe.DeletedAt == null);
+        modelBuilder.Entity<RecipeComponent>().HasQueryFilter(rc => rc.Recipe.DeletedAt == null);
     }
 
     public override Task<int> SaveChangesAsync(
