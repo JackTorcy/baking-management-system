@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import SubTitle from "../components/ui/SubTitle";
 import {
     describeYield,
+    formatAmount,
     formatGBP,
     formatQuantity,
     lengthUnitLabel,
@@ -724,9 +725,11 @@ function RecipeDetails() {
                                                     )}
                                                 </label>
                                             ) : (
-                                                <span className="w-14 shrink-0 text-right tabular-nums font-medium text-header">
-                                                    {formatQuantity(Number(ri.quantity) * scale)}
-                                                    {unitLabel[ri.unit]}
+                                                <span className="min-w-16 shrink-0 whitespace-nowrap text-right tabular-nums font-medium text-header">
+                                                    {formatAmount(
+                                                        Number(ri.quantity) * scale,
+                                                        ri.unit,
+                                                    )}
                                                 </span>
                                             )}
 

@@ -12,6 +12,7 @@ import {
 } from "../types/Ingredient";
 import {
     containsRecipe,
+    formatAmount,
     formatGBP,
     formatQuantity,
     recipeCost,
@@ -35,7 +36,7 @@ interface RecipeComponentsCardProps {
 const amountLabel = (quantity: number, unit: IngredientUnit, recipe?: ExistingRecipe) =>
     unit === "item"
         ? `${formatQuantity(quantity)} ${recipe ? yieldUnitLabel(recipe) : ""}`
-        : `${formatQuantity(quantity)}${unitLabel[unit]}`;
+        : formatAmount(quantity, unit);
 
 function RecipeComponentsCard({
     components,
@@ -135,7 +136,7 @@ function RecipeComponentsCard({
                                             )}
                                         </label>
                                     ) : (
-                                        <span className="w-24 shrink-0 text-right tabular-nums font-medium text-header">
+                                        <span className="min-w-24 shrink-0 whitespace-nowrap text-right tabular-nums font-medium text-header">
                                             {amountLabel(
                                                 Number(rc.quantity) * scale,
                                                 rc.unit,

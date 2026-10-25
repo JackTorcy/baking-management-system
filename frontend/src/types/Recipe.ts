@@ -93,7 +93,21 @@ export const toSaveRecipe = (recipe: NewRecipe) => ({
 export const formatGBP = (value: number) =>
     value.toLocaleString("en-GB", { style: "currency", currency: "GBP" });
 
-export const formatQuantity = (value: number) => String(Number(value.toFixed(2)));
+// Kitchen precision: nobody weighs 156.25ml, but 2.25g of yeast matters
+export const formatQuantity = (value: number) =>
+    String(Number(value.toFixed(value >= 100 ? 0 : value >= 10 ? 1 : 2)));
+
+const largerUnit: Partial<Record<IngredientUnit, IngredientUnit>> = {
+    gram: "kilogram",
+    millilitre: "litre",
+};
+
+export const formatAmount = (quantity: number, unit: IngredientUnit) => {
+    const larger = largerUnit[unit];
+    if (larger && Number(formatQuantity(quantity)) >= unitFactor[larger])
+        return `${formatQuantity(quantity / unitFactor[larger])}${unitLabel[larger]}`;
+    return `${formatQuantity(quantity)}${unitLabel[unit]}`;
+};
 
 export const yieldUnitLabel = (recipe: RecipeYield) =>
     recipe.yieldUnit === "item" ? recipe.yieldLabel || "batch" : unitLabel[recipe.yieldUnit];
