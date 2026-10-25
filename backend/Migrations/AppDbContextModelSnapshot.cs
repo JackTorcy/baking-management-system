@@ -344,6 +344,28 @@ namespace api_app.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric");
 
+                    b.Property<int?>("TinShape")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("TinSize")
+                        .HasColumnType("numeric");
+
+                    b.Property<int?>("TinUnit")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("TinWidth")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("YieldLabel")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("YieldQuantity")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("YieldUnit")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BakeryId");
@@ -366,6 +388,9 @@ namespace api_app.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<int>("RecipeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Unit")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");

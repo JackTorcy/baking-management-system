@@ -7,6 +7,13 @@ public class Recipe : IBakeryOwned
     public string Name { get; set; } = "";
     public decimal Price { get; set; }
     public string Description { get; set; } = "";
+    public decimal YieldQuantity { get; set; } = 1;
+    public IngredientUnit YieldUnit { get; set; } = IngredientUnit.item;
+    public string YieldLabel { get; set; } = "";
+    public TinShape? TinShape { get; set; }
+    public decimal? TinSize { get; set; }
+    public decimal? TinWidth { get; set; }
+    public LengthUnit? TinUnit { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? DeletedAt { get; set; }
 

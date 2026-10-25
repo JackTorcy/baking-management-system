@@ -2,25 +2,43 @@ import { useEffect, useState } from "react";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import { useNavigate, useParams } from "react-router-dom";
 import SubTitle from "../components/ui/SubTitle";
-import type { ExistingRecipe, NewRecipe } from "../types/Recipe";
+import {
+    describeYield,
+    formatGBP,
+    formatQuantity,
+    lengthUnitLabel,
+    recipeCost,
+    scaleFactor,
+    tinShapes,
+    toFormRecipe,
+    toSaveRecipe,
+    yieldUnitLabel,
+    type ExistingRecipe,
+    type LengthUnit,
+    type NewRecipe,
+    type RecipeResponse,
+    type RecipeYield,
+    type TinShape,
+} from "../types/Recipe";
 import {
     baseUnit,
-    pricePer,
+    ingredientUnits,
     unitKind,
     unitLabel,
     unitsOfKind,
     type ExistingIngredient,
     type IngredientUnit,
+    type UnitKind,
 } from "../types/Ingredient";
 import { Edit, Trash, X } from "lucide-react";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import PageTitleWithBack from "../components/ui/PageTitleWithBack";
-
-const formatGBP = (value: number) =>
-    value.toLocaleString("en-GB", { style: "currency", currency: "GBP" });
+import RecipeComponentsCard from "./RecipeComponentsCard";
 
 const statValue = "flex h-11 items-center text-2xl font-semibold tabular-nums";
+const smallInput = "border border-border bg-surface rounded-2xl py-2 px-3";
+const decimalPattern = /^\d*\.?\d*$/;
 
 function RecipeDetails() {
     const { id } = useParams();
@@ -35,24 +53,39 @@ function RecipeDetails() {
         name: "",
         price: "",
         description: "",
+        yieldQuantity: "1",
+        yieldUnit: "item",
+        yieldLabel: "",
+        tinShape: null,
+        tinSize: "",
+        tinWidth: "",
+        tinUnit: "inch",
         ingredients: [],
+        components: [],
     });
     const [recipeSnapshot, setRecipeSnapshot] = useState<NewRecipe>(recipe);
     const [allIngredients, setAllIngredients] = useState<ExistingIngredient[]>([]);
+    const [allRecipes, setAllRecipes] = useState<ExistingRecipe[]>([]);
+    const [lockedYieldKind, setLockedYieldKind] = useState<UnitKind | null>(null);
+    const [scaleTo, setScaleTo] = useState<RecipeYield | null>(null);
 
-    const ingredientCost = recipe.ingredients.reduce((total, ri) => {
-        const ingredient = allIngredients.find((i) => i.id === ri.ingredientId);
-        if (!ingredient) return total;
-        return total + Number(ri.quantity) * pricePer(ingredient, ri.unit);
-    }, 0);
+    const recipeId = isNew ? undefined : Number(id);
+    const scale = !editMode && scaleTo ? scaleFactor(recipe, scaleTo) : 1;
+    const cost = recipeCost(recipe, allRecipes, allIngredients, new Set(isNew ? [] : [recipeId!]));
     const price = Number(recipe.price);
-    const margin = price - ingredientCost;
+    const margin = price - cost;
+    const yieldUnitOptions = lockedYieldKind ? unitsOfKind(lockedYieldKind) : ingredientUnits;
+    const scaleTarget = scaleTo ?? recipe;
+
+    const updateScaleTo = (change: Partial<RecipeYield>) =>
+        setScaleTo((prev) => ({ ...(prev ?? recipe), ...change }));
 
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
             try {
                 await loadAllIngredients();
+                await loadAllRecipes();
                 if (!isNew) {
                     await loadRecipe();
                 } else {
@@ -70,16 +103,17 @@ function RecipeDetails() {
             const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/${id}`);
             if (!res.ok) throw new Error(`recipe load failed: ${res.status}`);
 
-            const data: ExistingRecipe = await res.json();
-            setRecipe({
-                name: data.name,
-                price: data.price,
-                description: data.description,
-                ingredients: data.ingredients.map((ri) => ({
-                    ...ri,
-                    quantity: String(ri.quantity),
-                })),
-            });
+            const data: RecipeResponse = await res.json();
+            setRecipe(toFormRecipe(data));
+            setLockedYieldKind(data.isUsedAsComponent ? unitKind[data.yieldUnit] : null);
+            setScaleTo(null);
+        };
+
+        const loadAllRecipes = async () => {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`);
+            if (!res.ok) throw new Error(`recipes load failed: ${res.status}`);
+            const data: RecipeResponse[] = await res.json();
+            setAllRecipes(data.map(toFormRecipe));
         };
 
         const loadAllIngredients = async () => {
@@ -113,8 +147,21 @@ function RecipeDetails() {
             newErrors.description = "Description is required";
         }
 
+        if (!(Number(recipe.yieldQuantity) > 0)) {
+            newErrors.yield = "How much the recipe makes must be greater than 0";
+        } else if (
+            recipe.tinShape &&
+            (!(Number(recipe.tinSize) > 0) ||
+                (recipe.tinShape === "rectangle" && !(Number(recipe.tinWidth) > 0)))
+        ) {
+            newErrors.yield = "Tin size must be greater than 0";
+        }
+
         if (recipe.ingredients.some((ri) => !(Number(ri.quantity) > 0)))
             newErrors.ingredients = "Ingredient quantities must all be greater than 0";
+
+        if (recipe.components.some((rc) => !(Number(rc.quantity) > 0)))
+            newErrors.components = "Component quantities must all be greater than 0";
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -130,13 +177,7 @@ function RecipeDetails() {
                 {
                     method: isNew ? "POST" : "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        ...recipe,
-                        ingredients: recipe.ingredients.map((ri) => ({
-                            ...ri,
-                            quantity: Number(ri.quantity),
-                        })),
-                    }),
+                    body: JSON.stringify(toSaveRecipe(recipe)),
                 },
             );
             if (!res.ok) throw new Error(`${isNew ? "create" : "edit"} failed: ${res.status}`);
@@ -205,6 +246,7 @@ function RecipeDetails() {
     };
 
     const switchEditMode = () => {
+        setScaleTo(null);
         if (editMode) {
             setRecipe(recipeSnapshot);
             setEditMode(false);
@@ -293,9 +335,250 @@ function RecipeDetails() {
                                 <span className="text-danger text-sm">{errors.description}</span>
                             )}
                         </div>
+                        <div>
+                            <label htmlFor="yieldQuantity" className="block mb-2">
+                                Makes
+                            </label>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <input
+                                    id="yieldQuantity"
+                                    inputMode="decimal"
+                                    className={`${smallInput} w-20 text-right`}
+                                    value={recipe.yieldQuantity}
+                                    onChange={(e) => {
+                                        if (decimalPattern.test(e.target.value))
+                                            setRecipe((prev) => ({
+                                                ...prev,
+                                                yieldQuantity: e.target.value,
+                                            }));
+                                    }}
+                                />
+                                <select
+                                    aria-label="Measured in"
+                                    className={smallInput}
+                                    value={recipe.yieldUnit}
+                                    onChange={(e) => {
+                                        const yieldUnit = e.target.value as IngredientUnit;
+                                        setRecipe((prev) => ({
+                                            ...prev,
+                                            yieldUnit,
+                                            tinShape: yieldUnit === "item" ? prev.tinShape : null,
+                                        }));
+                                    }}
+                                >
+                                    {yieldUnitOptions.map((unit) => (
+                                        <option key={unit} value={unit}>
+                                            {unit === "item" ? "count" : unitLabel[unit]}
+                                        </option>
+                                    ))}
+                                </select>
+                                {recipe.yieldUnit === "item" && (
+                                    <>
+                                        <input
+                                            aria-label="What it makes"
+                                            placeholder="e.g. layers"
+                                            maxLength={30}
+                                            className={`${smallInput} w-32`}
+                                            value={recipe.yieldLabel}
+                                            onChange={(e) =>
+                                                setRecipe((prev) => ({
+                                                    ...prev,
+                                                    yieldLabel: e.target.value,
+                                                }))
+                                            }
+                                        />
+                                        {recipe.tinShape && (
+                                            <>
+                                                <span>in a</span>
+                                                <input
+                                                    aria-label="Tin size"
+                                                    inputMode="decimal"
+                                                    className={`${smallInput} w-16 text-right`}
+                                                    value={recipe.tinSize}
+                                                    onChange={(e) => {
+                                                        if (decimalPattern.test(e.target.value))
+                                                            setRecipe((prev) => ({
+                                                                ...prev,
+                                                                tinSize: e.target.value,
+                                                            }));
+                                                    }}
+                                                />
+                                                {recipe.tinShape === "rectangle" && (
+                                                    <>
+                                                        <span>×</span>
+                                                        <input
+                                                            aria-label="Tin width"
+                                                            inputMode="decimal"
+                                                            className={`${smallInput} w-16 text-right`}
+                                                            value={recipe.tinWidth}
+                                                            onChange={(e) => {
+                                                                if (
+                                                                    decimalPattern.test(
+                                                                        e.target.value,
+                                                                    )
+                                                                )
+                                                                    setRecipe((prev) => ({
+                                                                        ...prev,
+                                                                        tinWidth: e.target.value,
+                                                                    }));
+                                                            }}
+                                                        />
+                                                    </>
+                                                )}
+                                                <select
+                                                    aria-label="Tin size unit"
+                                                    className={smallInput}
+                                                    value={recipe.tinUnit}
+                                                    onChange={(e) =>
+                                                        setRecipe((prev) => ({
+                                                            ...prev,
+                                                            tinUnit: e.target.value as LengthUnit,
+                                                        }))
+                                                    }
+                                                >
+                                                    {Object.entries(lengthUnitLabel).map(
+                                                        ([unit, label]) => (
+                                                            <option key={unit} value={unit}>
+                                                                {label}
+                                                            </option>
+                                                        ),
+                                                    )}
+                                                </select>
+                                            </>
+                                        )}
+                                        <select
+                                            aria-label="Tin shape"
+                                            className={smallInput}
+                                            value={recipe.tinShape ?? ""}
+                                            onChange={(e) =>
+                                                setRecipe((prev) => ({
+                                                    ...prev,
+                                                    tinShape: (e.target.value ||
+                                                        null) as TinShape | null,
+                                                }))
+                                            }
+                                        >
+                                            <option value="">no tin</option>
+                                            {tinShapes.map((shape) => (
+                                                <option key={shape} value={shape}>
+                                                    {shape}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {recipe.tinShape && <span>tin</span>}
+                                    </>
+                                )}
+                            </div>
+                            {errors.yield && (
+                                <span className="text-danger text-sm">{errors.yield}</span>
+                            )}
+                            {lockedYieldKind && (
+                                <div className="text-sm">
+                                    Used in other recipes, so only {lockedYieldKind} units are
+                                    available
+                                </div>
+                            )}
+                        </div>
                     </Card>
                 ) : (
-                    <p className="mb-4 max-w-prose">{recipe.description}</p>
+                    <div className="mb-4 max-w-prose">
+                        <p>{recipe.description}</p>
+                        <p className="mt-1 text-sm font-semibold">{describeYield(recipe)}</p>
+                    </div>
+                )}
+
+                {!editMode && (
+                    <Card className="mb-4 flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-header">Scale to</span>
+                        <input
+                            aria-label="Scale to amount"
+                            inputMode="decimal"
+                            className={`${smallInput} w-20 text-right`}
+                            value={scaleTarget.yieldQuantity}
+                            onChange={(e) => {
+                                if (decimalPattern.test(e.target.value))
+                                    updateScaleTo({ yieldQuantity: e.target.value });
+                            }}
+                        />
+                        {unitsOfKind(unitKind[recipe.yieldUnit]).length > 1 ? (
+                            <select
+                                aria-label="Scale to unit"
+                                className={smallInput}
+                                value={scaleTarget.yieldUnit}
+                                onChange={(e) =>
+                                    updateScaleTo({ yieldUnit: e.target.value as IngredientUnit })
+                                }
+                            >
+                                {unitsOfKind(unitKind[recipe.yieldUnit]).map((unit) => (
+                                    <option key={unit} value={unit}>
+                                        {unitLabel[unit]}
+                                    </option>
+                                ))}
+                            </select>
+                        ) : (
+                            <span>{yieldUnitLabel(recipe)}</span>
+                        )}
+                        {recipe.tinShape && (
+                            <>
+                                <span>in a</span>
+                                <input
+                                    aria-label="Scale to tin size"
+                                    inputMode="decimal"
+                                    className={`${smallInput} w-16 text-right`}
+                                    value={scaleTarget.tinSize}
+                                    onChange={(e) => {
+                                        if (decimalPattern.test(e.target.value))
+                                            updateScaleTo({ tinSize: e.target.value });
+                                    }}
+                                />
+                                {scaleTarget.tinShape === "rectangle" && (
+                                    <>
+                                        <span>×</span>
+                                        <input
+                                            aria-label="Scale to tin width"
+                                            inputMode="decimal"
+                                            className={`${smallInput} w-16 text-right`}
+                                            value={scaleTarget.tinWidth}
+                                            onChange={(e) => {
+                                                if (decimalPattern.test(e.target.value))
+                                                    updateScaleTo({ tinWidth: e.target.value });
+                                            }}
+                                        />
+                                    </>
+                                )}
+                                <span>{lengthUnitLabel[recipe.tinUnit]}</span>
+                                <select
+                                    aria-label="Scale to tin shape"
+                                    className={smallInput}
+                                    value={scaleTarget.tinShape ?? ""}
+                                    onChange={(e) =>
+                                        updateScaleTo({ tinShape: e.target.value as TinShape })
+                                    }
+                                >
+                                    {tinShapes.map((shape) => (
+                                        <option key={shape} value={shape}>
+                                            {shape}
+                                        </option>
+                                    ))}
+                                </select>
+                                <span>tin</span>
+                            </>
+                        )}
+                        {scaleTo && (
+                            <>
+                                <span className="ml-auto text-sm tabular-nums">
+                                    ×{formatQuantity(scale)}
+                                </span>
+                                <Button
+                                    variant="secondary"
+                                    className="min-w-0 py-1"
+                                    onClick={() => setScaleTo(null)}
+                                >
+                                    Reset
+                                </Button>
+                            </>
+                        )}
+                    </Card>
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
@@ -328,10 +611,11 @@ function RecipeDetails() {
                         )}
                     </Card>
                     <Card>
-                        <div className="text-sm">Ingredient cost</div>
-                        <div className={`${statValue} text-header`}>
-                            {formatGBP(ingredientCost)}
-                        </div>
+                        <div className="text-sm">Cost</div>
+                        <div className={`${statValue} text-header`}>{formatGBP(cost)}</div>
+                        {scale !== 1 && (
+                            <div className="text-sm">{formatGBP(cost * scale)} at this size</div>
+                        )}
                     </Card>
                     <Card>
                         <div className="text-sm">Margin</div>
@@ -441,7 +725,7 @@ function RecipeDetails() {
                                                 </label>
                                             ) : (
                                                 <span className="w-14 shrink-0 text-right tabular-nums font-medium text-header">
-                                                    {ri.quantity}
+                                                    {formatQuantity(Number(ri.quantity) * scale)}
                                                     {unitLabel[ri.unit]}
                                                 </span>
                                             )}
@@ -494,6 +778,17 @@ function RecipeDetails() {
                         </select>
                     </div>
                 </Card>
+
+                <RecipeComponentsCard
+                    components={recipe.components}
+                    recipes={allRecipes}
+                    ingredients={allIngredients}
+                    recipeId={recipeId}
+                    editMode={editMode}
+                    scale={scale}
+                    error={errors.components}
+                    onChange={(components) => setRecipe((prev) => ({ ...prev, components }))}
+                />
 
                 <div hidden={!editMode} className="flex justify-end">
                     <Button disabled={submitting} onClick={() => handleSubmit()}>

@@ -10,6 +10,8 @@ public interface IRecipeService
     Task<bool> IngredientsExistAsync(List<RecipeIngredientDto> ingredients);
     Task<bool> ComponentsExistAsync(List<RecipeComponentDto> components);
     Task<bool> UnitsMatchIngredientsAsync(List<RecipeIngredientDto> ingredients);
+    Task<bool> ComponentUnitsMatchYieldAsync(List<RecipeComponentDto> components);
+    Task<bool> YieldChangeAllowedAsync(int id, IngredientUnit newUnit);
     Task<bool> CreatesLoopAsync(int id, List<RecipeComponentDto> components);
     Task<bool> IsUsedAsComponentAsync(int id);
 }
@@ -29,7 +31,14 @@ public class RecipeService : IRecipeService
             .Recipes.Include(r => r.Ingredients.OrderBy(ri => ri.Id))
             .Include(r => r.Components.OrderBy(rc => rc.Id))
             .ToListAsync();
-        return recipes.Select(ToResponse).ToList();
+
+        var usedAsComponentIds = await _db
+            .RecipeComponents.Select(rc => rc.ComponentId)
+            .Distinct()
+            .ToListAsync();
+        var usedSet = usedAsComponentIds.ToHashSet();
+
+        return recipes.Select(r => ToResponse(r, usedSet.Contains(r.Id))).ToList();
     }
 
     public async Task<RecipeResponse?> GetAsync(int id)
@@ -42,7 +51,7 @@ public class RecipeService : IRecipeService
         if (recipe == null)
             return null;
 
-        return ToResponse(recipe);
+        return ToResponse(recipe, await IsUsedAsComponentAsync(id));
     }
 
     public async Task<RecipeResponse> CreateAsync(SaveRecipe dto)
@@ -53,6 +62,7 @@ public class RecipeService : IRecipeService
             Price = decimal.Parse(dto.Price),
             Description = dto.Description,
         };
+        SetYield(recipe, dto);
 
         recipe.Ingredients = dto
             .Ingredients.Select(i => new RecipeIngredient
@@ -68,12 +78,13 @@ public class RecipeService : IRecipeService
             {
                 ComponentId = c.ComponentId,
                 Quantity = c.Quantity,
+                Unit = c.Unit,
             })
             .ToList();
 
         _db.Recipes.Add(recipe);
         await _db.SaveChangesAsync();
-        return ToResponse(recipe);
+        return ToResponse(recipe, false);
     }
 
     public async Task<RecipeResponse?> UpdateAsync(int id, SaveRecipe dto)
@@ -88,6 +99,7 @@ public class RecipeService : IRecipeService
         recipe.Name = dto.Name;
         recipe.Price = decimal.Parse(dto.Price);
         recipe.Description = dto.Description;
+        SetYield(recipe, dto);
 
         recipe.Ingredients.RemoveAll(ri =>
             !dto.Ingredients.Any(i => i.IngredientId == ri.IngredientId)
@@ -124,17 +136,23 @@ public class RecipeService : IRecipeService
             if (existing != null)
             {
                 existing.Quantity = c.Quantity;
+                existing.Unit = c.Unit;
             }
             else
             {
                 recipe.Components.Add(
-                    new RecipeComponent { ComponentId = c.ComponentId, Quantity = c.Quantity }
+                    new RecipeComponent
+                    {
+                        ComponentId = c.ComponentId,
+                        Quantity = c.Quantity,
+                        Unit = c.Unit,
+                    }
                 );
             }
         }
 
         await _db.SaveChangesAsync();
-        return ToResponse(recipe);
+        return ToResponse(recipe, await IsUsedAsComponentAsync(id));
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -149,13 +167,33 @@ public class RecipeService : IRecipeService
         return true;
     }
 
-    private static RecipeResponse ToResponse(Recipe r) =>
+    private static void SetYield(Recipe recipe, SaveRecipe dto)
+    {
+        var hasTin = dto.TinShape != null;
+        recipe.YieldQuantity = dto.YieldQuantity;
+        recipe.YieldUnit = dto.YieldUnit;
+        recipe.YieldLabel = dto.YieldUnit == IngredientUnit.item ? dto.YieldLabel.Trim() : "";
+        recipe.TinShape = dto.TinShape;
+        recipe.TinSize = hasTin ? dto.TinSize : null;
+        recipe.TinWidth = dto.TinShape == TinShape.rectangle ? dto.TinWidth : null;
+        recipe.TinUnit = hasTin ? dto.TinUnit : null;
+    }
+
+    private static RecipeResponse ToResponse(Recipe r, bool isUsedAsComponent) =>
         new()
         {
             Id = r.Id,
             Name = r.Name,
             Price = r.Price.ToString("0.##"),
             Description = r.Description,
+            YieldQuantity = r.YieldQuantity,
+            YieldUnit = r.YieldUnit,
+            YieldLabel = r.YieldLabel,
+            TinShape = r.TinShape,
+            TinSize = r.TinSize,
+            TinWidth = r.TinWidth,
+            TinUnit = r.TinUnit,
+            IsUsedAsComponent = isUsedAsComponent,
             Ingredients = r
                 .Ingredients.Select(i => new RecipeIngredientDto
                 {
@@ -169,6 +207,7 @@ public class RecipeService : IRecipeService
                 {
                     ComponentId = c.ComponentId,
                     Quantity = c.Quantity,
+                    Unit = c.Unit,
                 })
                 .ToList(),
         };
@@ -197,6 +236,28 @@ public class RecipeService : IRecipeService
         return ingredients.All(ri =>
             units.TryGetValue(ri.IngredientId, out var unit) && unit.Kind() == ri.Unit.Kind()
         );
+    }
+
+    public async Task<bool> ComponentUnitsMatchYieldAsync(List<RecipeComponentDto> components)
+    {
+        var ids = components.Select(c => c.ComponentId).Distinct().ToList();
+        var yieldUnits = await _db
+            .Recipes.Where(r => ids.Contains(r.Id))
+            .ToDictionaryAsync(r => r.Id, r => r.YieldUnit);
+
+        return components.All(rc =>
+            yieldUnits.TryGetValue(rc.ComponentId, out var unit) && unit.Kind() == rc.Unit.Kind()
+        );
+    }
+
+    // Parent recipes store component quantities in a unit of the same kind as this yield, so switching kind would corrupt them
+    public async Task<bool> YieldChangeAllowedAsync(int id, IngredientUnit newUnit)
+    {
+        var recipe = await _db.Recipes.FindAsync(id);
+        if (recipe == null || recipe.YieldUnit.Kind() == newUnit.Kind())
+            return true;
+
+        return !await IsUsedAsComponentAsync(id);
     }
 
     public async Task<bool> CreatesLoopAsync(int recipeId, List<RecipeComponentDto> components)

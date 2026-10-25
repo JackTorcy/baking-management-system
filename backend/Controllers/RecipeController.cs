@@ -36,6 +36,10 @@ public class RecipeController : ControllerBase
             return BadRequest("One or more components don't exist");
         if (!await _service.UnitsMatchIngredientsAsync(dto.Ingredients))
             return BadRequest("Each ingredient's unit must match how that ingredient is measured");
+        if (!await _service.ComponentUnitsMatchYieldAsync(dto.Components))
+            return BadRequest(
+                "Each component's unit must match how that recipe's yield is measured"
+            );
 
         var recipe = await _service.CreateAsync(dto);
         if (recipe == null)
@@ -53,6 +57,14 @@ public class RecipeController : ControllerBase
             return BadRequest("One or more components don't exist");
         if (!await _service.UnitsMatchIngredientsAsync(dto.Ingredients))
             return BadRequest("Each ingredient's unit must match how that ingredient is measured");
+        if (!await _service.ComponentUnitsMatchYieldAsync(dto.Components))
+            return BadRequest(
+                "Each component's unit must match how that recipe's yield is measured"
+            );
+        if (!await _service.YieldChangeAllowedAsync(id, dto.YieldUnit))
+            return BadRequest(
+                "Can't switch between weight, volume and count while other recipes use this one"
+            );
         if (await _service.CreatesLoopAsync(id, dto.Components))
             return BadRequest("A recipe can't contain itself, directly or through another recipe");
 
