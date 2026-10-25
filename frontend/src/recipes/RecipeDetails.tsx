@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import SubTitle from "../components/ui/SubTitle";
 import type { ExistingRecipe, NewRecipe } from "../types/Recipe";
 import {
@@ -12,7 +12,15 @@ import {
     type ExistingIngredient,
     type IngredientUnit,
 } from "../types/Ingredient";
-import { ArrowLeft, Edit, Trash, X } from "lucide-react";
+import { Edit, Trash, X } from "lucide-react";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import PageTitleWithBack from "../components/ui/PageTitleWithBack";
+
+const formatGBP = (value: number) =>
+    value.toLocaleString("en-GB", { style: "currency", currency: "GBP" });
+
+const statValue = "flex h-11 items-center text-2xl font-semibold tabular-nums";
 
 function RecipeDetails() {
     const { id } = useParams();
@@ -37,6 +45,8 @@ function RecipeDetails() {
         if (!ingredient) return total;
         return total + Number(ri.quantity) * pricePer(ingredient, ri.unit);
     }, 0);
+    const price = Number(recipe.price);
+    const margin = price - ingredientCost;
 
     useEffect(() => {
         const loadData = async () => {
@@ -219,39 +229,34 @@ function RecipeDetails() {
 
             {/* ----- Page content ------ */}
             {/* Title Part, Back arrow */}
-            <div className="shrink-0 flex mb-4 items-center justify-between text-header">
-                <div className="flex gap-3 items-center">
-                    <Link to="/recipes">
-                        <ArrowLeft className="h-8 w-8" />
-                    </Link>
-
-                    <div className="text-4xl font-semibold tracking-tight">{buttonLabel}</div>
-                </div>
+            <div className="shrink-0 flex items-start justify-between gap-3">
+                <PageTitleWithBack
+                    title={editMode ? buttonLabel : recipe.name}
+                    backPath="/recipes"
+                />
                 <div hidden={isNew} className="flex gap-3 items-center">
-                    <button
-                        type="button"
-                        className="text-header rounded-4xl p-2 bg-secondary hover:bg-secondary-dark"
+                    <Button
+                        variant="secondary"
+                        icon
+                        aria-label={editMode ? "Cancel editing" : "Edit recipe"}
                         onClick={() => switchEditMode()}
                     >
-                        {editMode ? <X className="w-6 h-6"></X> : <Edit className="w-6 h-6"></Edit>}
-                    </button>
-                    <button
-                        type="button"
-                        className="text-header rounded-4xl p-2 bg-primary hover:bg-primary-dark"
-                        onClick={deleteRecipe}
-                    >
-                        <Trash className="w-6 h-6"></Trash>
-                    </button>
+                        {editMode ? <X className="w-6 h-6" /> : <Edit className="w-6 h-6" />}
+                    </Button>
+                    <Button variant="danger" icon aria-label="Delete recipe" onClick={deleteRecipe}>
+                        <Trash className="w-6 h-6" />
+                    </Button>
                 </div>
             </div>
 
             {/* Summary (Name, Total Price, Description) */}
             <div className="flex-1 overflow-y-auto">
-                <div className="border border-border/30 rounded-2xl flex flex-col max-h-80 p-2 my-4 bg-surface ">
-                    <SubTitle title="Summary"></SubTitle>
-                    <div className="flex mb-3 gap-3 items-center">
-                        <label htmlFor="name">Name:</label>
-                        {editMode ? (
+                {editMode ? (
+                    <Card className="flex flex-col gap-4 mb-4">
+                        <div>
+                            <label htmlFor="name" className="block mb-2">
+                                Name
+                            </label>
                             <input
                                 id="name"
                                 type="text"
@@ -264,52 +269,18 @@ function RecipeDetails() {
                                     }))
                                 }
                             />
-                        ) : (
-                            <div>{recipe.name}</div>
-                        )}
-                        {errors.name && <span className="text-danger text-sm">{errors.name}</span>}
-                    </div>
-
-                    <div className="flex mb-3 gap-3 items-center">
-                        <label htmlFor="price">Price:</label>
-                        {editMode ? (
-                            <input
-                                id="price"
-                                type="text"
-                                className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
-                                value={recipe.price}
-                                onChange={(e) =>
-                                    setRecipe((prev) => ({
-                                        ...prev,
-                                        price: e.target.value,
-                                    }))
-                                }
-                            />
-                        ) : (
-                            <div>£{recipe.price}</div>
-                        )}
-                        {errors.price && (
-                            <span className="text-danger text-sm">{errors.price}</span>
-                        )}
-                    </div>
-
-                    <div className="flex mb-3 gap-3 items-center">
-                        <span>Ingredient cost:</span>
-                        <div>
-                            {ingredientCost.toLocaleString("en-GB", {
-                                style: "currency",
-                                currency: "GBP",
-                            })}
+                            {errors.name && (
+                                <span className="text-danger text-sm">{errors.name}</span>
+                            )}
                         </div>
-                    </div>
-
-                    <div className="flex mb-3 gap-3 items-center">
-                        <label htmlFor="description">Description:</label>
-                        {editMode ? (
-                            <input
+                        <div>
+                            <label htmlFor="description" className="block mb-2">
+                                Description
+                            </label>
+                            <textarea
                                 id="description"
-                                type="text"
-                                className="border border-border bg-surface w-full rounded-2xl py-2 px-4"
+                                rows={3}
+                                className="border border-border bg-surface w-full rounded-2xl py-2 px-4 resize-none"
                                 value={recipe.description}
                                 onChange={(e) =>
                                     setRecipe((prev) => ({
@@ -318,13 +289,67 @@ function RecipeDetails() {
                                     }))
                                 }
                             />
+                            {errors.description && (
+                                <span className="text-danger text-sm">{errors.description}</span>
+                            )}
+                        </div>
+                    </Card>
+                ) : (
+                    <p className="mb-4 max-w-prose">{recipe.description}</p>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <Card>
+                        <label htmlFor="price" className="text-sm">
+                            Price
+                        </label>
+                        {editMode ? (
+                            <div className="relative h-11">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2">£</span>
+                                <input
+                                    id="price"
+                                    type="text"
+                                    inputMode="decimal"
+                                    className="h-full w-full rounded-lg border border-border bg-background pl-7 pr-3 text-xl font-semibold tabular-nums text-header"
+                                    value={recipe.price}
+                                    onChange={(e) =>
+                                        setRecipe((prev) => ({
+                                            ...prev,
+                                            price: e.target.value,
+                                        }))
+                                    }
+                                />
+                            </div>
                         ) : (
-                            <div>{recipe.description}</div>
+                            <div className={`${statValue} text-header`}>{formatGBP(price)}</div>
                         )}
-                        {errors.description && (
-                            <span className="text-danger text-sm">{errors.description}</span>
+                        {errors.price && (
+                            <span className="text-danger text-sm">{errors.price}</span>
                         )}
-                    </div>
+                    </Card>
+                    <Card>
+                        <div className="text-sm">Ingredient cost</div>
+                        <div className={`${statValue} text-header`}>
+                            {formatGBP(ingredientCost)}
+                        </div>
+                    </Card>
+                    <Card>
+                        <div className="text-sm">Margin</div>
+                        <div
+                            className={`${statValue} ${margin < 0 ? "text-danger" : "text-header"}`}
+                        >
+                            {price > 0 ? (
+                                <>
+                                    {formatGBP(margin)}
+                                    <span className="ml-2 text-base font-normal text-body">
+                                        {Math.round((margin / price) * 100)}%
+                                    </span>
+                                </>
+                            ) : (
+                                "—"
+                            )}
+                        </div>
+                    </Card>
                 </div>
 
                 {/* Overview (serves, prep, cook times) */}
@@ -341,7 +366,7 @@ function RecipeDetails() {
                 </div>
             </div> */}
 
-                <div className="border border-border/30 rounded-2xl flex flex-col max-h-80 p-2 my-4 bg-surface">
+                <Card className="flex flex-col max-h-80 mb-4">
                     <SubTitle title="Ingredients"></SubTitle>
                     {errors.ingredients && (
                         <span className="text-danger text-sm">{errors.ingredients}</span>
@@ -468,15 +493,10 @@ function RecipeDetails() {
                                 ))}
                         </select>
                     </div>
-                </div>
+                </Card>
 
                 <div hidden={!editMode} className="flex justify-end">
-                    <button
-                        type="button"
-                        disabled={submitting}
-                        className="border flex min-w-40 min-h-8 items-center justify-center border-border text-header rounded-2xl py-1 px-3 bg-primary hover:bg-primary-dark"
-                        onClick={() => handleSubmit()}
-                    >
+                    <Button disabled={submitting} onClick={() => handleSubmit()}>
                         {submitting ? (
                             <LoadingSpinner className="w-4 h-4" />
                         ) : editMode ? (
@@ -484,7 +504,7 @@ function RecipeDetails() {
                         ) : (
                             "Create"
                         )}
-                    </button>
+                    </Button>
                 </div>
             </div>
 
