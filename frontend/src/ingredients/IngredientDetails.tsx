@@ -17,6 +17,17 @@ import { useEffect, useState } from "react";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import PageTitleWithBack from "../components/ui/PageTitleWithBack";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import UsedInRecipes from "../recipes/UsedInRecipes";
+import CostChangeList from "../recipes/CostChangeList";
+import {
+    costChanges,
+    recipesUsingIngredient,
+    toFormRecipe,
+    withParentRecipes,
+    type CostChange,
+    type ExistingRecipe,
+    type RecipeResponse,
+} from "../types/Recipe";
 
 function IngredientDetails() {
     const { id } = useParams();
@@ -36,6 +47,10 @@ function IngredientDetails() {
     const [confirmingDelete, setConfirmingDelete] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState("");
+    const [allRecipes, setAllRecipes] = useState<ExistingRecipe[]>([]);
+    const [allIngredients, setAllIngredients] = useState<ExistingIngredient[]>([]);
+    const [costImpact, setCostImpact] = useState<CostChange[] | null>(null);
+    const usedIn = isEditing ? recipesUsingIngredient(Number(id), allRecipes) : [];
     const unitOptions = lockedKind ? unitsOfKind(lockedKind) : ingredientUnits;
     const isUsedInRecipe = lockedKind !== null;
 
@@ -89,8 +104,19 @@ function IngredientDetails() {
         const loadIngredient = async () => {
             setLoading(true);
             try {
-                const res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients/${id}`);
+                const [res, recipesRes, ingredientsRes] = await Promise.all([
+                    fetch(`${import.meta.env.VITE_API_URL}/ingredients/${id}`),
+                    fetch(`${import.meta.env.VITE_API_URL}/recipes`),
+                    fetch(`${import.meta.env.VITE_API_URL}/ingredients`),
+                ]);
                 if (!res.ok) throw new Error(`load failed: ${res.status}`);
+                if (!recipesRes.ok) throw new Error(`recipes load failed: ${recipesRes.status}`);
+                if (!ingredientsRes.ok)
+                    throw new Error(`ingredients load failed: ${ingredientsRes.status}`);
+
+                const recipes: RecipeResponse[] = await recipesRes.json();
+                setAllRecipes(recipes.map(toFormRecipe));
+                setAllIngredients(await ingredientsRes.json());
 
                 const data: ExistingIngredient = await res.json();
                 setIngredient({
@@ -130,9 +156,29 @@ function IngredientDetails() {
         }
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = () => {
         if (!validate()) return;
 
+        const changes = isEditing
+            ? costChanges(
+                  withParentRecipes(usedIn, allRecipes),
+                  { recipes: allRecipes, ingredients: allIngredients },
+                  {
+                      recipes: allRecipes,
+                      ingredients: allIngredients.map((i) =>
+                          i.id === Number(id) ? { ...i, ...ingredient } : i,
+                      ),
+                  },
+              )
+            : [];
+        if (changes.length > 0) {
+            setCostImpact(changes);
+            return;
+        }
+        saveIngredient();
+    };
+
+    const saveIngredient = async () => {
         setSubmitting(true);
         try {
             const res = await fetch(
@@ -145,7 +191,8 @@ function IngredientDetails() {
             );
             if (!res.ok) throw new Error(`${isEditing ? "edit" : "create"} failed: ${res.status}`);
 
-            const data = await res.json();
+            const data: ExistingIngredient = await res.json();
+            setAllIngredients((prev) => prev.map((i) => (i.id === data.id ? data : i)));
             navigate(`/ingredients/${data.id}`);
         } catch (err) {
             console.error(err);
@@ -166,6 +213,7 @@ function IngredientDetails() {
     return (
         <>
             <PageTitleWithBack title={buttonLabel} backPath="/ingredients"></PageTitleWithBack>
+            <UsedInRecipes recipes={usedIn} />
 
             <div className="grid grid-cols-1 mb-4">
                 <div>
@@ -284,6 +332,21 @@ function IngredientDetails() {
                     {submitting ? <LoadingSpinner className="w-4 h-4" /> : buttonLabel}
                 </button>
             </div>
+
+            <ConfirmDialog
+                open={costImpact !== null}
+                title="This affects other recipes"
+                confirmLabel="Save changes"
+                confirmVariant="primary"
+                busy={submitting}
+                onConfirm={() => {
+                    setCostImpact(null);
+                    saveIngredient();
+                }}
+                onCancel={() => setCostImpact(null)}
+            >
+                {costImpact && <CostChangeList changes={costImpact} />}
+            </ConfirmDialog>
 
             <ConfirmDialog
                 open={confirmingDelete}

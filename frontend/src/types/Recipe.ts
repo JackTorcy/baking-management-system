@@ -247,3 +247,54 @@ export const containsRecipe = (
         const component = recipes.find((r) => r.id === rc.componentId);
         return !!component && containsRecipe(component, targetId, recipes, visited);
     });
+
+export const recipesUsingIngredient = (ingredientId: number, recipes: ExistingRecipe[]) =>
+    recipes.filter((r) => r.ingredients.some((ri) => ri.ingredientId === ingredientId));
+
+export const recipesUsingComponent = (componentId: number, recipes: ExistingRecipe[]) =>
+    recipes.filter((r) => r.components.some((rc) => rc.componentId === componentId));
+
+// The given recipes plus every recipe that uses them as a component, at any depth
+export const withParentRecipes = (start: ExistingRecipe[], recipes: ExistingRecipe[]) => {
+    const found = new Map(start.map((r) => [r.id, r]));
+    const toVisit = [...start];
+    while (toVisit.length > 0) {
+        const current = toVisit.shift()!;
+        for (const parent of recipesUsingComponent(current.id, recipes)) {
+            if (found.has(parent.id)) continue;
+            found.set(parent.id, parent);
+            toVisit.push(parent);
+        }
+    }
+    return [...found.values()];
+};
+
+export interface CostChange {
+    recipe: ExistingRecipe;
+    before: number;
+    after: number;
+}
+
+interface CostInputs {
+    recipes: ExistingRecipe[];
+    ingredients: ExistingIngredient[];
+}
+
+// Only recipes whose cost moves by at least a penny, so edits like renaming never warn
+export const costChanges = (
+    affected: ExistingRecipe[],
+    before: CostInputs,
+    after: CostInputs,
+): CostChange[] =>
+    affected
+        .map((recipe) => ({
+            recipe,
+            before: recipeCost(recipe, before.recipes, before.ingredients, new Set([recipe.id])),
+            after: recipeCost(
+                after.recipes.find((r) => r.id === recipe.id) ?? recipe,
+                after.recipes,
+                after.ingredients,
+                new Set([recipe.id]),
+            ),
+        }))
+        .filter((change) => Math.abs(change.after - change.before) >= 0.005);

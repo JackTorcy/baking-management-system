@@ -4,12 +4,16 @@ import { useNavigate, useParams } from "react-router-dom";
 import SubTitle from "../components/ui/SubTitle";
 import {
     amountLeft,
+    costChanges,
     describeYield,
     formatAmount,
     recipeCost,
+    recipesUsingComponent,
     scaleFactor,
     toFormRecipe,
     toSaveRecipe,
+    withParentRecipes,
+    type CostChange,
     type ExistingRecipe,
     type NewRecipe,
     type RecipeIngredient,
@@ -28,6 +32,8 @@ import RecipeYieldFields from "./RecipeYieldFields";
 import RecipeScaleControl from "./RecipeScaleControl";
 import RecipeStats from "./RecipeStats";
 import AmountInput from "./AmountInput";
+import UsedInRecipes from "./UsedInRecipes";
+import CostChangeList from "./CostChangeList";
 
 function RecipeDetails() {
     const { id } = useParams();
@@ -59,6 +65,7 @@ function RecipeDetails() {
     const [lockedYieldKind, setLockedYieldKind] = useState<UnitKind | null>(null);
     const [scaleTo, setScaleTo] = useState<RecipeYield | null>(null);
     const [dialog, setDialog] = useState<"delete" | "discard" | null>(null);
+    const [costImpact, setCostImpact] = useState<CostChange[] | null>(null);
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState("");
 
@@ -66,6 +73,7 @@ function RecipeDetails() {
     const scale = !editMode && scaleTo ? scaleFactor(recipe, scaleTo) : 1;
     const cost = recipeCost(recipe, allRecipes, allIngredients, new Set(isNew ? [] : [recipeId!]));
     const isUsedAsComponent = lockedYieldKind !== null;
+    const parentRecipes = isNew ? [] : recipesUsingComponent(recipeId!, allRecipes);
     const hasUnsavedChanges = JSON.stringify(recipe) !== JSON.stringify(recipeSnapshot);
 
     const updateRecipe = (change: Partial<NewRecipe>) =>
@@ -193,9 +201,27 @@ function RecipeDetails() {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = () => {
         if (!validate()) return;
 
+        const changes = isNew
+            ? []
+            : costChanges(
+                  withParentRecipes(parentRecipes, allRecipes),
+                  { recipes: allRecipes, ingredients: allIngredients },
+                  {
+                      recipes: allRecipes.map((r) => (r.id === recipeId ? { ...r, ...recipe } : r)),
+                      ingredients: allIngredients,
+                  },
+              );
+        if (changes.length > 0) {
+            setCostImpact(changes);
+            return;
+        }
+        saveRecipe();
+    };
+
+    const saveRecipe = async () => {
         setSubmitting(true);
         try {
             const res = await fetch(
@@ -208,9 +234,16 @@ function RecipeDetails() {
             );
             if (!res.ok) throw new Error(`${isNew ? "create" : "edit"} failed: ${res.status}`);
 
-            const data = await res.json();
+            const saved = toFormRecipe(await res.json());
+            // Keep step Ids and other recipes' cost checks in line with what the server stored
+            setAllRecipes((prev) =>
+                prev.some((r) => r.id === saved.id)
+                    ? prev.map((r) => (r.id === saved.id ? saved : r))
+                    : [...prev, saved],
+            );
+            if (!isNew) setRecipe(saved);
             setEditMode(false);
-            navigate(`/recipes/${data.id}`);
+            navigate(`/recipes/${saved.id}`);
         } catch (err) {
             console.error(err);
         } finally {
@@ -334,6 +367,7 @@ function RecipeDetails() {
 
             {/* Summary (Name, Total Price, Description) */}
             <div className="flex-1 overflow-y-auto">
+                <UsedInRecipes recipes={parentRecipes} />
                 {editMode ? (
                     <Card className="flex flex-col gap-4 mb-4">
                         <div>
@@ -583,6 +617,21 @@ function RecipeDetails() {
                     </Button>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={costImpact !== null}
+                title="This affects other recipes"
+                confirmLabel="Save changes"
+                confirmVariant="primary"
+                busy={submitting}
+                onConfirm={() => {
+                    setCostImpact(null);
+                    saveRecipe();
+                }}
+                onCancel={() => setCostImpact(null)}
+            >
+                {costImpact && <CostChangeList changes={costImpact} />}
+            </ConfirmDialog>
 
             <ConfirmDialog
                 open={dialog === "discard"}
