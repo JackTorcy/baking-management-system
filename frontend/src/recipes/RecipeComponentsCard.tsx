@@ -11,10 +11,9 @@ import {
     type IngredientUnit,
 } from "../types/Ingredient";
 import {
+    amountLabel,
     containsRecipe,
-    formatAmount,
     formatGBP,
-    formatQuantity,
     recipeCost,
     yieldFraction,
     yieldUnitLabel,
@@ -32,11 +31,6 @@ interface RecipeComponentsCardProps {
     error?: string;
     onChange: (components: RecipeComponent[]) => void;
 }
-
-const amountLabel = (quantity: number, unit: IngredientUnit, recipe?: ExistingRecipe) =>
-    unit === "item"
-        ? `${formatQuantity(quantity)} ${recipe ? yieldUnitLabel(recipe) : ""}`
-        : formatAmount(quantity, unit);
 
 function RecipeComponentsCard({
     components,

@@ -235,7 +235,8 @@ function IngredientDetails() {
                 {errors.packSize && <div className="text-danger text-sm">{errors.packSize}</div>}
                 {lockedKind && (
                     <div className="text-sm">
-                        Used in recipes, so only {lockedKind} units are available
+                        Used in recipes, so only{" "}
+                        {lockedKind === "count" ? "items are" : `${lockedKind} units are`} available
                     </div>
                 )}
             </div>

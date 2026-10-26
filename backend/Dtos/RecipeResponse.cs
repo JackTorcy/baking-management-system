@@ -14,4 +14,5 @@ public class RecipeResponse
     public bool IsUsedAsComponent { get; set; }
     public List<RecipeIngredientDto> Ingredients { get; set; } = new();
     public List<RecipeComponentDto> Components { get; set; } = new();
+    public List<RecipeStepDto> Steps { get; set; } = new();
 }

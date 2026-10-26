@@ -32,6 +32,7 @@ export interface NewRecipe extends RecipeYield {
     description: string;
     ingredients: RecipeIngredient[];
     components: RecipeComponent[];
+    steps: RecipeStep[];
 }
 
 export interface ExistingRecipe extends NewRecipe {
@@ -51,11 +52,27 @@ export interface RecipeComponent {
     unit: IngredientUnit;
 }
 
+export interface RecipeStep {
+    id: number | null;
+    // React key that stays put while new (unsaved) steps are moved around
+    key: string;
+    instruction: string;
+    ingredients: RecipeIngredient[];
+    components: RecipeComponent[];
+}
+
 type WithNumberQuantity<T> = Omit<T, "quantity"> & { quantity: number };
+
+interface RecipeStepResponse {
+    id: number;
+    instruction: string;
+    ingredients: WithNumberQuantity<RecipeIngredient>[];
+    components: WithNumberQuantity<RecipeComponent>[];
+}
 
 export interface RecipeResponse extends Omit<
     ExistingRecipe,
-    "yieldQuantity" | "tinSize" | "tinWidth" | "tinUnit" | "ingredients" | "components"
+    "yieldQuantity" | "tinSize" | "tinWidth" | "tinUnit" | "ingredients" | "components" | "steps"
 > {
     yieldQuantity: number;
     tinSize: number | null;
@@ -63,7 +80,16 @@ export interface RecipeResponse extends Omit<
     tinUnit: LengthUnit | null;
     ingredients: WithNumberQuantity<RecipeIngredient>[];
     components: WithNumberQuantity<RecipeComponent>[];
+    steps: RecipeStepResponse[];
 }
+
+export const newStep = (): RecipeStep => ({
+    id: null,
+    key: crypto.randomUUID(),
+    instruction: "",
+    ingredients: [],
+    components: [],
+});
 
 export const toFormRecipe = (data: RecipeResponse): ExistingRecipe => ({
     ...data,
@@ -73,6 +99,12 @@ export const toFormRecipe = (data: RecipeResponse): ExistingRecipe => ({
     tinUnit: data.tinUnit ?? "inch",
     ingredients: data.ingredients.map((ri) => ({ ...ri, quantity: String(ri.quantity) })),
     components: data.components.map((rc) => ({ ...rc, quantity: String(rc.quantity) })),
+    steps: data.steps.map((step) => ({
+        ...step,
+        key: String(step.id),
+        ingredients: step.ingredients.map((si) => ({ ...si, quantity: String(si.quantity) })),
+        components: step.components.map((sc) => ({ ...sc, quantity: String(sc.quantity) })),
+    })),
 });
 
 export const toSaveRecipe = (recipe: NewRecipe) => ({
@@ -88,6 +120,12 @@ export const toSaveRecipe = (recipe: NewRecipe) => ({
     tinUnit: recipe.tinShape ? recipe.tinUnit : null,
     ingredients: recipe.ingredients.map((ri) => ({ ...ri, quantity: Number(ri.quantity) })),
     components: recipe.components.map((rc) => ({ ...rc, quantity: Number(rc.quantity) })),
+    steps: recipe.steps.map((step) => ({
+        id: step.id,
+        instruction: step.instruction,
+        ingredients: step.ingredients.map((si) => ({ ...si, quantity: Number(si.quantity) })),
+        components: step.components.map((sc) => ({ ...sc, quantity: Number(sc.quantity) })),
+    })),
 });
 
 export const formatGBP = (value: number) =>
@@ -112,6 +150,22 @@ export const formatAmount = (quantity: number, unit: IngredientUnit) => {
 export const yieldUnitLabel = (recipe: RecipeYield) =>
     recipe.yieldUnit === "item" ? recipe.yieldLabel || "batch" : unitLabel[recipe.yieldUnit];
 
+export const amountLabel = (quantity: number, unit: IngredientUnit, recipe?: RecipeYield) =>
+    unit === "item"
+        ? `${formatQuantity(quantity)} ${recipe ? yieldUnitLabel(recipe) : ""}`
+        : formatAmount(quantity, unit);
+
+type Amount = { quantity: string; unit: IngredientUnit };
+
+// How much of a recipe line the steps haven't used yet, in that line's unit
+export const amountLeft = (line: Amount, usedInSteps: Amount[]) =>
+    Number(line.quantity) -
+    usedInSteps.reduce(
+        (total, used) =>
+            total + (Number(used.quantity) * unitFactor[used.unit]) / unitFactor[line.unit],
+        0,
+    );
+
 export const describeTin = (recipe: RecipeYield) => {
     const unit = lengthUnitLabel[recipe.tinUnit];
     const width = recipe.tinShape === "rectangle" ? ` × ${recipe.tinWidth} ${unit}` : "";
@@ -119,7 +173,12 @@ export const describeTin = (recipe: RecipeYield) => {
 };
 
 export const describeYield = (recipe: RecipeYield) => {
-    const unit = yieldUnitLabel(recipe);
+    const unit =
+        recipe.yieldUnit === "item" && !recipe.yieldLabel
+            ? Number(recipe.yieldQuantity) === 1
+                ? "item"
+                : "items"
+            : yieldUnitLabel(recipe);
     const amount = `Makes ${recipe.yieldQuantity}${recipe.yieldUnit === "item" ? ` ${unit}` : unit}`;
     return recipe.tinShape ? `${amount} · ${describeTin(recipe)}` : amount;
 };

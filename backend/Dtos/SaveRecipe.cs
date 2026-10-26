@@ -40,6 +40,7 @@ public class SaveRecipe : IValidatableObject
 
     public List<RecipeIngredientDto> Ingredients { get; set; } = new();
     public List<RecipeComponentDto> Components { get; set; } = new();
+    public List<RecipeStepDto> Steps { get; set; } = new();
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
@@ -55,6 +56,9 @@ public class SaveRecipe : IValidatableObject
                 [nameof(Components)]
             );
 
+        foreach (var error in ValidateSteps())
+            yield return error;
+
         if (TinShape == null)
             yield break;
 
@@ -69,5 +73,62 @@ public class SaveRecipe : IValidatableObject
 
         if (TinShape == global::TinShape.rectangle && TinWidth == null)
             yield return new ValidationResult("Rectangle tins need a width", [nameof(TinWidth)]);
+    }
+
+    private IEnumerable<ValidationResult> ValidateSteps()
+    {
+        if (
+            Steps.Any(s =>
+                s.Ingredients.GroupBy(i => i.IngredientId).Any(g => g.Count() > 1)
+                || s.Components.GroupBy(c => c.ComponentId).Any(g => g.Count() > 1)
+            )
+        )
+            yield return new ValidationResult(
+                "Each ingredient and component can only be added to a step once",
+                [nameof(Steps)]
+            );
+
+        var ingredientErrors = Steps
+            .SelectMany(s => s.Ingredients)
+            .GroupBy(si => si.IngredientId)
+            .Select(g =>
+                StepUsageError(
+                    Ingredients.FirstOrDefault(i => i.IngredientId == g.Key) is { } line
+                        ? (line.Quantity, line.Unit)
+                        : null,
+                    g.Select(si => (si.Quantity, si.Unit))
+                )
+            );
+        var componentErrors = Steps
+            .SelectMany(s => s.Components)
+            .GroupBy(sc => sc.ComponentId)
+            .Select(g =>
+                StepUsageError(
+                    Components.FirstOrDefault(c => c.ComponentId == g.Key) is { } line
+                        ? (line.Quantity, line.Unit)
+                        : null,
+                    g.Select(sc => (sc.Quantity, sc.Unit))
+                )
+            );
+
+        var error = ingredientErrors.Concat(componentErrors).FirstOrDefault(e => e != null);
+        if (error != null)
+            yield return new ValidationResult(error, [nameof(Steps)]);
+    }
+
+    private static string? StepUsageError(
+        (decimal Quantity, IngredientUnit Unit)? total,
+        IEnumerable<(decimal Quantity, IngredientUnit Unit)> uses
+    )
+    {
+        if (total == null)
+            return "Steps can only use ingredients and components in this recipe";
+
+        var (quantity, unit) = total.Value;
+        if (uses.Any(u => u.Unit.Kind() != unit.Kind()))
+            return "Step amounts must use the same kind of unit as the recipe";
+        if (uses.Sum(u => u.Quantity * u.Unit.Factor()) > quantity * unit.Factor())
+            return "Steps use more of an ingredient or component than the recipe has";
+        return null;
     }
 }

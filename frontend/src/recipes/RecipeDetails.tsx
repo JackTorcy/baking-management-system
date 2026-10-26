@@ -3,6 +3,7 @@ import LoadingSpinner from "../components/ui/LoadingSpinner";
 import { useNavigate, useParams } from "react-router-dom";
 import SubTitle from "../components/ui/SubTitle";
 import {
+    amountLeft,
     describeYield,
     formatAmount,
     formatGBP,
@@ -36,6 +37,7 @@ import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import PageTitleWithBack from "../components/ui/PageTitleWithBack";
 import RecipeComponentsCard from "./RecipeComponentsCard";
+import RecipeMethodCard from "./RecipeMethodCard";
 
 const statValue = "flex h-11 items-center text-2xl font-semibold tabular-nums";
 const smallInput = "border border-border bg-surface rounded-2xl py-2 px-3";
@@ -63,6 +65,7 @@ function RecipeDetails() {
         tinUnit: "inch",
         ingredients: [],
         components: [],
+        steps: [],
     });
     const [recipeSnapshot, setRecipeSnapshot] = useState<NewRecipe>(recipe);
     const [allIngredients, setAllIngredients] = useState<ExistingIngredient[]>([]);
@@ -75,7 +78,10 @@ function RecipeDetails() {
     const cost = recipeCost(recipe, allRecipes, allIngredients, new Set(isNew ? [] : [recipeId!]));
     const price = Number(recipe.price);
     const margin = price - cost;
-    const yieldUnitOptions = lockedYieldKind ? unitsOfKind(lockedYieldKind) : ingredientUnits;
+    const measuredYieldUnits = lockedYieldKind
+        ? unitsOfKind(lockedYieldKind)
+        : ingredientUnits.filter((unit) => unit !== "item");
+    const countsYield = recipe.yieldUnit === "item";
     const scaleTarget = scaleTo ?? recipe;
 
     const updateScaleTo = (change: Partial<RecipeYield>) =>
@@ -164,6 +170,41 @@ function RecipeDetails() {
         if (recipe.components.some((rc) => !(Number(rc.quantity) > 0)))
             newErrors.components = "Component quantities must all be greater than 0";
 
+        const overUsed = [
+            ...recipe.ingredients.map((ri) => ({
+                name: allIngredients.find((i) => i.id === ri.ingredientId)?.name,
+                left: amountLeft(
+                    ri,
+                    recipe.steps.flatMap((s) =>
+                        s.ingredients.filter((si) => si.ingredientId === ri.ingredientId),
+                    ),
+                ),
+            })),
+            ...recipe.components.map((rc) => ({
+                name: allRecipes.find((r) => r.id === rc.componentId)?.name,
+                left: amountLeft(
+                    rc,
+                    recipe.steps.flatMap((s) =>
+                        s.components.filter((sc) => sc.componentId === rc.componentId),
+                    ),
+                ),
+            })),
+        ].find((line) => line.left < -0.001);
+
+        if (recipe.steps.some((s) => !s.instruction.trim())) {
+            newErrors.steps = "Every step needs an instruction";
+        } else if (
+            recipe.steps.some(
+                (s) =>
+                    s.ingredients.some((si) => !(Number(si.quantity) > 0)) ||
+                    s.components.some((sc) => !(Number(sc.quantity) > 0)),
+            )
+        ) {
+            newErrors.steps = "Step amounts must all be greater than 0";
+        } else if (overUsed) {
+            newErrors.steps = `Steps use more ${overUsed.name} than the recipe has`;
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -225,6 +266,10 @@ function RecipeDetails() {
         setRecipe((prev) => ({
             ...prev,
             ingredients: prev.ingredients.filter((ri) => ri.ingredientId !== id),
+            steps: prev.steps.map((s) => ({
+                ...s,
+                ingredients: s.ingredients.filter((si) => si.ingredientId !== id),
+            })),
         }));
     };
 
@@ -354,30 +399,30 @@ function RecipeDetails() {
                                             }));
                                     }}
                                 />
-                                <select
-                                    aria-label="Measured in"
-                                    className={smallInput}
-                                    value={recipe.yieldUnit}
-                                    onChange={(e) => {
-                                        const yieldUnit = e.target.value as IngredientUnit;
-                                        setRecipe((prev) => ({
-                                            ...prev,
-                                            yieldUnit,
-                                            tinShape: yieldUnit === "item" ? prev.tinShape : null,
-                                        }));
-                                    }}
-                                >
-                                    {yieldUnitOptions.map((unit) => (
-                                        <option key={unit} value={unit}>
-                                            {unit === "item" ? "count" : unitLabel[unit]}
-                                        </option>
-                                    ))}
-                                </select>
-                                {recipe.yieldUnit === "item" && (
+                                {!countsYield && (
+                                    <select
+                                        aria-label="Measured in"
+                                        className={smallInput}
+                                        value={recipe.yieldUnit}
+                                        onChange={(e) =>
+                                            setRecipe((prev) => ({
+                                                ...prev,
+                                                yieldUnit: e.target.value as IngredientUnit,
+                                            }))
+                                        }
+                                    >
+                                        {measuredYieldUnits.map((unit) => (
+                                            <option key={unit} value={unit}>
+                                                {unitLabel[unit]}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+                                {countsYield && (
                                     <>
                                         <input
                                             aria-label="What it makes"
-                                            placeholder="e.g. layers"
+                                            placeholder="items, layers, loaves…"
                                             maxLength={30}
                                             className={`${smallInput} w-32`}
                                             value={recipe.yieldLabel}
@@ -473,11 +518,27 @@ function RecipeDetails() {
                             {errors.yield && (
                                 <span className="text-danger text-sm">{errors.yield}</span>
                             )}
-                            {lockedYieldKind && (
+                            {lockedYieldKind ? (
                                 <div className="text-sm">
-                                    Used in other recipes, so only {lockedYieldKind} units are
-                                    available
+                                    Used in other recipes, so it stays measured by{" "}
+                                    {lockedYieldKind === "count" ? "items" : lockedYieldKind}
                                 </div>
+                            ) : (
+                                <button
+                                    type="button"
+                                    className="mt-1 text-sm text-primary-dark underline hover:text-primary"
+                                    onClick={() =>
+                                        setRecipe((prev) => ({
+                                            ...prev,
+                                            yieldUnit: countsYield ? "gram" : "item",
+                                            tinShape: null,
+                                        }))
+                                    }
+                                >
+                                    {countsYield
+                                        ? "Measure by weight or volume instead"
+                                        : "Measure by count instead"}
+                                </button>
                             )}
                         </div>
                     </Card>
@@ -790,7 +851,28 @@ function RecipeDetails() {
                     editMode={editMode}
                     scale={scale}
                     error={errors.components}
-                    onChange={(components) => setRecipe((prev) => ({ ...prev, components }))}
+                    onChange={(components) =>
+                        setRecipe((prev) => ({
+                            ...prev,
+                            components,
+                            steps: prev.steps.map((s) => ({
+                                ...s,
+                                components: s.components.filter((sc) =>
+                                    components.some((c) => c.componentId === sc.componentId),
+                                ),
+                            })),
+                        }))
+                    }
+                />
+
+                <RecipeMethodCard
+                    recipe={recipe}
+                    recipes={allRecipes}
+                    ingredients={allIngredients}
+                    editMode={editMode}
+                    scale={scale}
+                    error={errors.steps}
+                    onChange={(steps) => setRecipe((prev) => ({ ...prev, steps }))}
                 />
 
                 <div hidden={!editMode} className="flex justify-end">

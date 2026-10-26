@@ -19,6 +19,9 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<Recipe> Recipes => Set<Recipe>();
     public DbSet<RecipeTag> RecipeTags => Set<RecipeTag>();
     public DbSet<RecipeComponent> RecipeComponents => Set<RecipeComponent>();
+    public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
+    public DbSet<RecipeStepIngredient> RecipeStepIngredients => Set<RecipeStepIngredient>();
+    public DbSet<RecipeStepComponent> RecipeStepComponents => Set<RecipeStepComponent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -69,9 +72,35 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .WithMany(i => i.UsedInRecipes)
             .HasForeignKey(ri => ri.IngredientId);
 
+        // Steps point at the recipe's own ingredient/component lines, so removing a line removes its step amounts
+        modelBuilder
+            .Entity<RecipeStep>()
+            .HasOne(s => s.Recipe)
+            .WithMany(r => r.Steps)
+            .HasForeignKey(s => s.RecipeId);
+
+        modelBuilder
+            .Entity<RecipeStepIngredient>()
+            .HasOne(si => si.RecipeIngredient)
+            .WithMany()
+            .HasForeignKey(si => si.RecipeIngredientId);
+
+        modelBuilder
+            .Entity<RecipeStepComponent>()
+            .HasOne(sc => sc.RecipeComponent)
+            .WithMany()
+            .HasForeignKey(sc => sc.RecipeComponentId);
+
         //Dont include a recipes components or ingredients on recipes that are deleted
         modelBuilder.Entity<RecipeIngredient>().HasQueryFilter(ri => ri.Recipe.DeletedAt == null);
         modelBuilder.Entity<RecipeComponent>().HasQueryFilter(rc => rc.Recipe.DeletedAt == null);
+        modelBuilder.Entity<RecipeStep>().HasQueryFilter(s => s.Recipe.DeletedAt == null);
+        modelBuilder
+            .Entity<RecipeStepIngredient>()
+            .HasQueryFilter(si => si.RecipeStep.Recipe.DeletedAt == null);
+        modelBuilder
+            .Entity<RecipeStepComponent>()
+            .HasQueryFilter(sc => sc.RecipeStep.Recipe.DeletedAt == null);
     }
 
     public override Task<int> SaveChangesAsync(

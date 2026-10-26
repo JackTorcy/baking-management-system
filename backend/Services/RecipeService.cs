@@ -25,12 +25,19 @@ public class RecipeService : IRecipeService
         _db = db;
     }
 
-    public async Task<List<RecipeResponse>> GetAllAsync()
-    {
-        var recipes = await _db
+    private IQueryable<Recipe> RecipesWithDetails() =>
+        _db
             .Recipes.Include(r => r.Ingredients.OrderBy(ri => ri.Id))
             .Include(r => r.Components.OrderBy(rc => rc.Id))
-            .ToListAsync();
+            .Include(r => r.Steps)
+                .ThenInclude(s => s.Ingredients)
+            .Include(r => r.Steps)
+                .ThenInclude(s => s.Components)
+            .AsSplitQuery();
+
+    public async Task<List<RecipeResponse>> GetAllAsync()
+    {
+        var recipes = await RecipesWithDetails().ToListAsync();
 
         var usedAsComponentIds = await _db
             .RecipeComponents.Select(rc => rc.ComponentId)
@@ -43,10 +50,7 @@ public class RecipeService : IRecipeService
 
     public async Task<RecipeResponse?> GetAsync(int id)
     {
-        var recipe = await _db
-            .Recipes.Include(r => r.Ingredients.OrderBy(ri => ri.Id))
-            .Include(r => r.Components.OrderBy(rc => rc.Id))
-            .FirstOrDefaultAsync(r => r.Id == id);
+        var recipe = await RecipesWithDetails().FirstOrDefaultAsync(r => r.Id == id);
 
         if (recipe == null)
             return null;
@@ -82,6 +86,8 @@ public class RecipeService : IRecipeService
             })
             .ToList();
 
+        SetSteps(recipe, dto);
+
         _db.Recipes.Add(recipe);
         await _db.SaveChangesAsync();
         return ToResponse(recipe, false);
@@ -89,10 +95,7 @@ public class RecipeService : IRecipeService
 
     public async Task<RecipeResponse?> UpdateAsync(int id, SaveRecipe dto)
     {
-        var recipe = await _db
-            .Recipes.Include(r => r.Ingredients)
-            .Include(r => r.Components)
-            .FirstOrDefaultAsync(r => r.Id == id);
+        var recipe = await RecipesWithDetails().FirstOrDefaultAsync(r => r.Id == id);
         if (recipe == null)
             return null;
 
@@ -151,6 +154,8 @@ public class RecipeService : IRecipeService
             }
         }
 
+        SetSteps(recipe, dto);
+
         await _db.SaveChangesAsync();
         return ToResponse(recipe, await IsUsedAsComponentAsync(id));
     }
@@ -177,6 +182,46 @@ public class RecipeService : IRecipeService
         recipe.TinSize = hasTin ? dto.TinSize : null;
         recipe.TinWidth = dto.TinShape == TinShape.rectangle ? dto.TinWidth : null;
         recipe.TinUnit = hasTin ? dto.TinUnit : null;
+    }
+
+    // Steps keep their Ids across saves so sessions can point at them; step amounts are simply rebuilt
+    private static void SetSteps(Recipe recipe, SaveRecipe dto)
+    {
+        recipe.Steps.RemoveAll(s => !dto.Steps.Any(d => d.Id == s.Id));
+
+        for (var position = 0; position < dto.Steps.Count; position++)
+        {
+            var stepDto = dto.Steps[position];
+            var step = recipe.Steps.FirstOrDefault(s => s.Id == stepDto.Id);
+            if (step == null)
+            {
+                step = new RecipeStep();
+                recipe.Steps.Add(step);
+            }
+
+            step.Position = position;
+            step.Instruction = stepDto.Instruction.Trim();
+            step.Ingredients = stepDto
+                .Ingredients.Select(i => new RecipeStepIngredient
+                {
+                    RecipeIngredient = recipe.Ingredients.First(ri =>
+                        ri.IngredientId == i.IngredientId
+                    ),
+                    Quantity = i.Quantity,
+                    Unit = i.Unit,
+                })
+                .ToList();
+            step.Components = stepDto
+                .Components.Select(c => new RecipeStepComponent
+                {
+                    RecipeComponent = recipe.Components.First(rc =>
+                        rc.ComponentId == c.ComponentId
+                    ),
+                    Quantity = c.Quantity,
+                    Unit = c.Unit,
+                })
+                .ToList();
+        }
     }
 
     private static RecipeResponse ToResponse(Recipe r, bool isUsedAsComponent) =>
@@ -208,6 +253,32 @@ public class RecipeService : IRecipeService
                     ComponentId = c.ComponentId,
                     Quantity = c.Quantity,
                     Unit = c.Unit,
+                })
+                .ToList(),
+            Steps = r
+                .Steps.OrderBy(s => s.Position)
+                .Select(s => new RecipeStepDto
+                {
+                    Id = s.Id,
+                    Instruction = s.Instruction,
+                    Ingredients = s
+                        .Ingredients.OrderBy(si => si.Id)
+                        .Select(si => new RecipeIngredientDto
+                        {
+                            IngredientId = si.RecipeIngredient.IngredientId,
+                            Quantity = si.Quantity,
+                            Unit = si.Unit,
+                        })
+                        .ToList(),
+                    Components = s
+                        .Components.OrderBy(sc => sc.Id)
+                        .Select(sc => new RecipeComponentDto
+                        {
+                            ComponentId = sc.RecipeComponent.ComponentId,
+                            Quantity = sc.Quantity,
+                            Unit = sc.Unit,
+                        })
+                        .ToList(),
                 })
                 .ToList(),
         };

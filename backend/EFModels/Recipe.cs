@@ -20,6 +20,7 @@ public class Recipe : IBakeryOwned
     public List<RecipeComponent> Components { get; set; } = new();
     public List<RecipeComponent> UsedIn { get; set; } = new();
     public List<RecipeIngredient> Ingredients { get; set; } = new();
+    public List<RecipeStep> Steps { get; set; } = new();
     public List<RecipeTag> RecipeTags { get; set; } = new();
     public int BakeryId { get; set; }
     public Bakery Bakery { get; set; } = null!;

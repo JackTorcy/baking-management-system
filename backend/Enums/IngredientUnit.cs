@@ -23,4 +23,10 @@ public static class IngredientUnitExtensions
         IngredientUnit.item => UnitKind.Count,
         _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, null)
     };
+
+    public static decimal Factor(this IngredientUnit unit) => unit switch
+    {
+        IngredientUnit.kilogram or IngredientUnit.litre => 1000m,
+        _ => 1m
+    };
 }

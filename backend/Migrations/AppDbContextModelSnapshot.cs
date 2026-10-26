@@ -446,6 +446,89 @@ namespace api_app.Migrations
                     b.ToTable("RecipeRecipeTag");
                 });
 
+            modelBuilder.Entity("RecipeStep", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Instruction")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipeId");
+
+                    b.ToTable("RecipeSteps");
+                });
+
+            modelBuilder.Entity("RecipeStepComponent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("RecipeComponentId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RecipeStepId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Unit")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipeComponentId");
+
+                    b.HasIndex("RecipeStepId");
+
+                    b.ToTable("RecipeStepComponents");
+                });
+
+            modelBuilder.Entity("RecipeStepIngredient", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("RecipeIngredientId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RecipeStepId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Unit")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipeIngredientId");
+
+                    b.HasIndex("RecipeStepId");
+
+                    b.ToTable("RecipeStepIngredients");
+                });
+
             modelBuilder.Entity("RecipeTag", b =>
                 {
                     b.Property<int>("Id")
@@ -631,6 +714,55 @@ namespace api_app.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("RecipeStep", b =>
+                {
+                    b.HasOne("Recipe", "Recipe")
+                        .WithMany("Steps")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Recipe");
+                });
+
+            modelBuilder.Entity("RecipeStepComponent", b =>
+                {
+                    b.HasOne("RecipeComponent", "RecipeComponent")
+                        .WithMany()
+                        .HasForeignKey("RecipeComponentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RecipeStep", "RecipeStep")
+                        .WithMany("Components")
+                        .HasForeignKey("RecipeStepId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RecipeComponent");
+
+                    b.Navigation("RecipeStep");
+                });
+
+            modelBuilder.Entity("RecipeStepIngredient", b =>
+                {
+                    b.HasOne("RecipeIngredient", "RecipeIngredient")
+                        .WithMany()
+                        .HasForeignKey("RecipeIngredientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RecipeStep", "RecipeStep")
+                        .WithMany("Ingredients")
+                        .HasForeignKey("RecipeStepId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RecipeIngredient");
+
+                    b.Navigation("RecipeStep");
+                });
+
             modelBuilder.Entity("RecipeTag", b =>
                 {
                     b.HasOne("Bakery", "Bakery")
@@ -658,7 +790,16 @@ namespace api_app.Migrations
 
                     b.Navigation("Ingredients");
 
+                    b.Navigation("Steps");
+
                     b.Navigation("UsedIn");
+                });
+
+            modelBuilder.Entity("RecipeStep", b =>
+                {
+                    b.Navigation("Components");
+
+                    b.Navigation("Ingredients");
                 });
 #pragma warning restore 612, 618
         }
