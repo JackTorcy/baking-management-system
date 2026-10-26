@@ -4,6 +4,7 @@ const variantStyle = {
     primary: "bg-primary text-header hover:bg-primary-dark",
     secondary: "bg-secondary text-header hover:bg-secondary-dark",
     danger: "bg-danger text-white hover:bg-danger/85",
+    outline: "border border-border bg-surface text-header hover:bg-background",
 };
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

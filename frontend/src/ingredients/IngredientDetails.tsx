@@ -16,6 +16,7 @@ import {
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import PageTitleWithBack from "../components/ui/PageTitleWithBack";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 
 function IngredientDetails() {
     const { id } = useParams();
@@ -32,6 +33,9 @@ function IngredientDetails() {
         ingredientUnit: "kilogram",
     });
     const [lockedKind, setLockedKind] = useState<UnitKind | null>(null);
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState("");
     const unitOptions = lockedKind ? unitsOfKind(lockedKind) : ingredientUnits;
     const isUsedInRecipe = lockedKind !== null;
 
@@ -108,14 +112,21 @@ function IngredientDetails() {
     }, [id, isEditing]);
 
     const deleteIngredient = async () => {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients/${id}`, {
-            method: "DELETE",
-        });
-        if (res.ok) {
-            navigate("/ingredients");
-            return;
-        } else {
-            console.error("delete failed: ", res.status);
+        setDeleting(true);
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/ingredients/${id}`, {
+                method: "DELETE",
+            });
+            if (res.ok) {
+                navigate("/ingredients");
+                return;
+            }
+            setDeleteError("Couldn't delete this ingredient. Try again.");
+        } catch (err) {
+            console.error(err);
+            setDeleteError("Couldn't delete this ingredient. Try again.");
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -256,7 +267,10 @@ function IngredientDetails() {
                     type="button"
                     hidden={!isEditing}
                     disabled={isEditing && isUsedInRecipe}
-                    onClick={deleteIngredient}
+                    onClick={() => {
+                        setDeleteError("");
+                        setConfirmingDelete(true);
+                    }}
                     className="border-2 flex min-w-40 min-h-8 items-center justify-center border-border text-header rounded-2xl py-1 px-3 bg-danger hover:bg-primary-dark disabled:bg-surface disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-50"
                 >
                     Delete Ingredient
@@ -270,6 +284,18 @@ function IngredientDetails() {
                     {submitting ? <LoadingSpinner className="w-4 h-4" /> : buttonLabel}
                 </button>
             </div>
+
+            <ConfirmDialog
+                open={confirmingDelete}
+                title={`Delete ${ingredient.name}?`}
+                confirmLabel="Delete ingredient"
+                busy={deleting}
+                onConfirm={deleteIngredient}
+                onCancel={() => setConfirmingDelete(false)}
+            >
+                This can't be undone.
+                {deleteError && <p className="mt-2 text-sm text-danger">{deleteError}</p>}
+            </ConfirmDialog>
         </>
     );
 }

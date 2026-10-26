@@ -21,6 +21,7 @@ import { Edit, Trash, X } from "lucide-react";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import PageTitleWithBack from "../components/ui/PageTitleWithBack";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 import RecipeComponentsCard from "./RecipeComponentsCard";
 import RecipeMethodCard from "./RecipeMethodCard";
 import RecipeYieldFields from "./RecipeYieldFields";
@@ -57,10 +58,15 @@ function RecipeDetails() {
     const [allRecipes, setAllRecipes] = useState<ExistingRecipe[]>([]);
     const [lockedYieldKind, setLockedYieldKind] = useState<UnitKind | null>(null);
     const [scaleTo, setScaleTo] = useState<RecipeYield | null>(null);
+    const [dialog, setDialog] = useState<"delete" | "discard" | null>(null);
+    const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState("");
 
     const recipeId = isNew ? undefined : Number(id);
     const scale = !editMode && scaleTo ? scaleFactor(recipe, scaleTo) : 1;
     const cost = recipeCost(recipe, allRecipes, allIngredients, new Set(isNew ? [] : [recipeId!]));
+    const isUsedAsComponent = lockedYieldKind !== null;
+    const hasUnsavedChanges = JSON.stringify(recipe) !== JSON.stringify(recipeSnapshot);
 
     const updateRecipe = (change: Partial<NewRecipe>) =>
         setRecipe((prev) => ({ ...prev, ...change }));
@@ -213,15 +219,31 @@ function RecipeDetails() {
     };
 
     const deleteRecipe = async () => {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/${id}`, {
-            method: "DELETE",
-        });
-        if (res.ok) {
-            navigate("/recipes");
-            return;
-        } else {
-            console.error("delete failed: ", res.status);
+        setDeleting(true);
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/${id}`, {
+                method: "DELETE",
+            });
+            if (res.ok) {
+                navigate("/recipes");
+                return;
+            }
+            setDeleteError(
+                res.status === 409
+                    ? "This recipe is used in other recipes. Remove it from them first."
+                    : "Couldn't delete this recipe. Try again.",
+            );
+        } catch (err) {
+            console.error(err);
+            setDeleteError("Couldn't delete this recipe. Try again.");
+        } finally {
+            setDeleting(false);
         }
+    };
+
+    const openDeleteDialog = () => {
+        setDeleteError("");
+        setDialog("delete");
     };
 
     const addIngredientToRecipe = (id: number) => {
@@ -260,15 +282,26 @@ function RecipeDetails() {
         }));
     };
 
-    const switchEditMode = () => {
+    const startEditing = () => {
         setScaleTo(null);
-        if (editMode) {
-            setRecipe(recipeSnapshot);
-            setEditMode(false);
-        } else {
-            setRecipeSnapshot(recipe);
-            setEditMode(true);
+        setRecipeSnapshot(recipe);
+        setEditMode(true);
+    };
+
+    const discardChanges = () => {
+        setDialog(null);
+        if (isNew) {
+            navigate("/recipes");
+            return;
         }
+        setRecipe(recipeSnapshot);
+        setErrors({});
+        setEditMode(false);
+    };
+
+    const cancelEditing = () => {
+        if (hasUnsavedChanges) setDialog("discard");
+        else discardChanges();
     };
 
     if (loadFailed) return <div>Failed to load data</div>;
@@ -291,19 +324,12 @@ function RecipeDetails() {
                     title={editMode ? buttonLabel : recipe.name}
                     backPath="/recipes"
                 />
-                <div hidden={isNew} className="flex gap-3 items-center">
-                    <Button
-                        variant="secondary"
-                        icon
-                        aria-label={editMode ? "Cancel editing" : "Edit recipe"}
-                        onClick={() => switchEditMode()}
-                    >
-                        {editMode ? <X className="w-6 h-6" /> : <Edit className="w-6 h-6" />}
+                {!editMode && (
+                    <Button variant="secondary" className="shrink-0 gap-2" onClick={startEditing}>
+                        <Edit className="h-5 w-5" />
+                        Edit
                     </Button>
-                    <Button variant="danger" icon aria-label="Delete recipe" onClick={deleteRecipe}>
-                        <Trash className="w-6 h-6" />
-                    </Button>
-                </div>
+                )}
             </div>
 
             {/* Summary (Name, Total Price, Description) */}
@@ -522,18 +548,67 @@ function RecipeDetails() {
                     onChange={(steps) => updateRecipe({ steps })}
                 />
 
-                <div hidden={!editMode} className="flex justify-end">
+                {editMode && !isNew && (
+                    <div className="mt-2 mb-4 border-t border-border/40 pt-4">
+                        <button
+                            type="button"
+                            className="flex items-center gap-1.5 font-semibold text-danger hover:underline"
+                            onClick={openDeleteDialog}
+                        >
+                            <Trash className="h-4 w-4" />
+                            Delete recipe
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {editMode && (
+                <div className="shrink-0 flex flex-wrap items-center justify-end gap-2 border-t border-border pt-3">
+                    {Object.keys(errors).length > 0 && (
+                        <span role="alert" className="mr-auto text-sm text-danger">
+                            Fix the errors above before saving
+                        </span>
+                    )}
+                    <Button variant="outline" onClick={cancelEditing}>
+                        Cancel
+                    </Button>
                     <Button disabled={submitting} onClick={() => handleSubmit()}>
                         {submitting ? (
                             <LoadingSpinner className="w-4 h-4" />
-                        ) : editMode ? (
-                            "Save Changes"
+                        ) : isNew ? (
+                            "Create recipe"
                         ) : (
-                            "Create"
+                            "Save changes"
                         )}
                     </Button>
                 </div>
-            </div>
+            )}
+
+            <ConfirmDialog
+                open={dialog === "discard"}
+                title="Discard changes?"
+                cancelLabel="Keep editing"
+                confirmLabel="Discard"
+                onConfirm={discardChanges}
+                onCancel={() => setDialog(null)}
+            >
+                Your unsaved changes to this recipe will be lost.
+            </ConfirmDialog>
+
+            <ConfirmDialog
+                open={dialog === "delete"}
+                title={isUsedAsComponent ? "Can't delete this recipe" : `Delete ${recipe.name}?`}
+                cancelLabel={isUsedAsComponent ? "Close" : "Cancel"}
+                confirmLabel={isUsedAsComponent ? undefined : "Delete recipe"}
+                busy={deleting}
+                onConfirm={deleteRecipe}
+                onCancel={() => setDialog(null)}
+            >
+                {isUsedAsComponent
+                    ? "It's used in other recipes. Remove it from them first."
+                    : "This can't be undone."}
+                {deleteError && <p className="mt-2 text-sm text-danger">{deleteError}</p>}
+            </ConfirmDialog>
 
             {/* Scaling? */}
             {/* Components */}
