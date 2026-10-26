@@ -128,6 +128,8 @@ export const toSaveRecipe = (recipe: NewRecipe) => ({
     })),
 });
 
+export const decimalPattern = /^\d*\.?\d*$/;
+
 export const formatGBP = (value: number) =>
     value.toLocaleString("en-GB", { style: "currency", currency: "GBP" });
 

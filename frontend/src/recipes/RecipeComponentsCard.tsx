@@ -3,13 +3,8 @@ import { Link } from "react-router-dom";
 import { ChevronDown, ChevronRight, X } from "lucide-react";
 import Card from "../components/ui/Card";
 import SubTitle from "../components/ui/SubTitle";
-import {
-    unitKind,
-    unitLabel,
-    unitsOfKind,
-    type ExistingIngredient,
-    type IngredientUnit,
-} from "../types/Ingredient";
+import AmountInput from "./AmountInput";
+import { unitLabel, type ExistingIngredient, type IngredientUnit } from "../types/Ingredient";
 import {
     amountLabel,
     containsRecipe,
@@ -84,7 +79,6 @@ function RecipeComponentsCard({
                         const cost =
                             recipeCost(component, recipes, ingredients, new Set([component.id])) *
                             fraction;
-                        const unitOptions = unitsOfKind(unitKind[component.yieldUnit]);
                         const unitName = (unit: IngredientUnit) =>
                             unit === "item" ? yieldUnitLabel(component) : unitLabel[unit];
                         const isExpanded = expanded.includes(rc.componentId);
@@ -93,42 +87,19 @@ function RecipeComponentsCard({
                             <div key={rc.componentId} className="py-2">
                                 <div className="flex items-center gap-2">
                                     {editMode ? (
-                                        <label className="flex w-36 shrink-0 items-center rounded-lg border border-border/70 bg-background px-2 py-0.5 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
-                                            <input
-                                                inputMode="decimal"
-                                                aria-label={`Quantity of ${component.name}`}
-                                                className="w-full min-w-0 bg-transparent text-right tabular-nums text-header outline-none"
-                                                value={rc.quantity}
-                                                onChange={(e) => {
-                                                    if (/^\d*\.?\d*$/.test(e.target.value))
-                                                        updateComponent(rc.componentId, {
-                                                            quantity: e.target.value,
-                                                        });
-                                                }}
-                                            />
-                                            {unitOptions.length > 1 ? (
-                                                <select
-                                                    aria-label={`Unit for ${component.name}`}
-                                                    className="ml-1 bg-transparent text-sm text-body/70 outline-none"
-                                                    value={rc.unit}
-                                                    onChange={(e) =>
-                                                        updateComponent(rc.componentId, {
-                                                            unit: e.target.value as IngredientUnit,
-                                                        })
-                                                    }
-                                                >
-                                                    {unitOptions.map((unit) => (
-                                                        <option key={unit} value={unit}>
-                                                            {unitName(unit)}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            ) : (
-                                                <span className="ml-1 truncate text-sm text-body/70">
-                                                    {unitName(rc.unit)}
-                                                </span>
-                                            )}
-                                        </label>
+                                        <AmountInput
+                                            name={component.name}
+                                            quantity={rc.quantity}
+                                            unit={rc.unit}
+                                            unitName={unitName}
+                                            className="w-36"
+                                            onQuantityChange={(quantity) =>
+                                                updateComponent(rc.componentId, { quantity })
+                                            }
+                                            onUnitChange={(unit) =>
+                                                updateComponent(rc.componentId, { unit })
+                                            }
+                                        />
                                     ) : (
                                         <span className="min-w-24 shrink-0 whitespace-nowrap text-right tabular-nums font-medium text-header">
                                             {amountLabel(
