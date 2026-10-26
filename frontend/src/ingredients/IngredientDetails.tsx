@@ -17,6 +17,8 @@ import { useEffect, useState } from "react";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import PageTitleWithBack from "../components/ui/PageTitleWithBack";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import ErrorList from "../components/ui/ErrorList";
+import { apiErrorMessages, networkErrorMessage } from "../api/apiErrors";
 import UsedInRecipes from "../recipes/UsedInRecipes";
 import CostChangeList from "../recipes/CostChangeList";
 import {
@@ -50,6 +52,7 @@ function IngredientDetails() {
     const [allRecipes, setAllRecipes] = useState<ExistingRecipe[]>([]);
     const [allIngredients, setAllIngredients] = useState<ExistingIngredient[]>([]);
     const [costImpact, setCostImpact] = useState<CostChange[] | null>(null);
+    const [saveErrors, setSaveErrors] = useState<string[]>([]);
     const usedIn = isEditing ? recipesUsingIngredient(Number(id), allRecipes) : [];
     const unitOptions = lockedKind ? unitsOfKind(lockedKind) : ingredientUnits;
     const isUsedInRecipe = lockedKind !== null;
@@ -179,6 +182,7 @@ function IngredientDetails() {
     };
 
     const saveIngredient = async () => {
+        setSaveErrors([]);
         setSubmitting(true);
         try {
             const res = await fetch(
@@ -189,13 +193,17 @@ function IngredientDetails() {
                     body: JSON.stringify(ingredient),
                 },
             );
-            if (!res.ok) throw new Error(`${isEditing ? "edit" : "create"} failed: ${res.status}`);
+            if (!res.ok) {
+                setSaveErrors(await apiErrorMessages(res));
+                return;
+            }
 
             const data: ExistingIngredient = await res.json();
             setAllIngredients((prev) => prev.map((i) => (i.id === data.id ? data : i)));
             navigate(`/ingredients/${data.id}`);
         } catch (err) {
             console.error(err);
+            setSaveErrors([networkErrorMessage]);
         } finally {
             setSubmitting(false);
         }
@@ -310,6 +318,11 @@ function IngredientDetails() {
                     </>
                 )}
             </div>
+            {saveErrors.length > 0 && (
+                <div className="mb-3">
+                    <ErrorList errors={saveErrors} />
+                </div>
+            )}
             <div className="flex justify-end gap-2">
                 <button
                     type="button"

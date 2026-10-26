@@ -26,6 +26,8 @@ import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import PageTitleWithBack from "../components/ui/PageTitleWithBack";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import ErrorList from "../components/ui/ErrorList";
+import { apiErrorMessages, networkErrorMessage } from "../api/apiErrors";
 import RecipeComponentsCard from "./RecipeComponentsCard";
 import RecipeMethodCard from "./RecipeMethodCard";
 import RecipeYieldFields from "./RecipeYieldFields";
@@ -66,6 +68,7 @@ function RecipeDetails() {
     const [scaleTo, setScaleTo] = useState<RecipeYield | null>(null);
     const [dialog, setDialog] = useState<"delete" | "discard" | null>(null);
     const [costImpact, setCostImpact] = useState<CostChange[] | null>(null);
+    const [saveErrors, setSaveErrors] = useState<string[]>([]);
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState("");
 
@@ -223,6 +226,7 @@ function RecipeDetails() {
     };
 
     const saveRecipe = async () => {
+        setSaveErrors([]);
         setSubmitting(true);
         try {
             const res = await fetch(
@@ -233,7 +237,10 @@ function RecipeDetails() {
                     body: JSON.stringify(toSaveRecipe(recipe)),
                 },
             );
-            if (!res.ok) throw new Error(`${isNew ? "create" : "edit"} failed: ${res.status}`);
+            if (!res.ok) {
+                setSaveErrors(await apiErrorMessages(res));
+                return;
+            }
 
             const saved = toFormRecipe(await res.json());
             // Keep step Ids and other recipes' cost checks in line with what the server stored
@@ -247,6 +254,7 @@ function RecipeDetails() {
             navigate(`/recipes/${saved.id}`);
         } catch (err) {
             console.error(err);
+            setSaveErrors([networkErrorMessage]);
         } finally {
             setSubmitting(false);
         }
@@ -330,6 +338,7 @@ function RecipeDetails() {
         }
         setRecipe(recipeSnapshot);
         setErrors({});
+        setSaveErrors([]);
         setEditMode(false);
     };
 
@@ -599,6 +608,11 @@ function RecipeDetails() {
 
             {editMode && (
                 <div className="shrink-0 flex flex-wrap items-center justify-end gap-2 border-t border-border pt-3">
+                    {saveErrors.length > 0 && (
+                        <div className="w-full">
+                            <ErrorList errors={saveErrors} />
+                        </div>
+                    )}
                     {Object.keys(errors).length > 0 && (
                         <span role="alert" className="mr-auto text-sm text-danger">
                             Fix the errors above before saving
