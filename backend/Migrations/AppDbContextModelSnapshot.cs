@@ -341,7 +341,7 @@ namespace api_app.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal>("Price")
+                    b.Property<decimal?>("SellingPrice")
                         .HasColumnType("numeric");
 
                     b.Property<int?>("TinShape")

@@ -63,7 +63,7 @@ public class RecipeService : IRecipeService
         Recipe recipe = new Recipe
         {
             Name = dto.Name,
-            Price = decimal.Parse(dto.Price),
+            SellingPrice = ParseSellingPrice(dto.SellingPrice),
             Description = dto.Description,
         };
         SetYield(recipe, dto);
@@ -100,7 +100,7 @@ public class RecipeService : IRecipeService
             return null;
 
         recipe.Name = dto.Name;
-        recipe.Price = decimal.Parse(dto.Price);
+        recipe.SellingPrice = ParseSellingPrice(dto.SellingPrice);
         recipe.Description = dto.Description;
         SetYield(recipe, dto);
 
@@ -172,6 +172,9 @@ public class RecipeService : IRecipeService
         return true;
     }
 
+    private static decimal? ParseSellingPrice(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : decimal.Parse(value);
+
     private static void SetYield(Recipe recipe, SaveRecipe dto)
     {
         var hasTin = dto.TinShape != null;
@@ -229,7 +232,7 @@ public class RecipeService : IRecipeService
         {
             Id = r.Id,
             Name = r.Name,
-            Price = r.Price.ToString("0.##"),
+            SellingPrice = r.SellingPrice?.ToString("0.##"),
             Description = r.Description,
             YieldQuantity = r.YieldQuantity,
             YieldUnit = r.YieldUnit,

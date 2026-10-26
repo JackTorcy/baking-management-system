@@ -2,40 +2,51 @@ import Card from "../components/ui/Card";
 import { formatGBP } from "../types/Recipe";
 
 interface RecipeStatsProps {
-    price: string;
+    sellingPrice: string;
     cost: number;
     scale: number;
     editMode: boolean;
     error?: string;
-    onPriceChange: (price: string) => void;
+    onSellingPriceChange: (sellingPrice: string) => void;
 }
 
 const statValue = "flex h-11 items-center text-2xl font-semibold tabular-nums";
 
-function RecipeStats({ price, cost, scale, editMode, error, onPriceChange }: RecipeStatsProps) {
-    const priceValue = Number(price);
+function RecipeStats({
+    sellingPrice,
+    cost,
+    scale,
+    editMode,
+    error,
+    onSellingPriceChange,
+}: RecipeStatsProps) {
+    const isSold = sellingPrice.trim() !== "";
+    const priceValue = Number(sellingPrice);
     const margin = priceValue - cost;
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <Card>
-                <label htmlFor="price" className="text-sm">
-                    Price
+                <label htmlFor="sellingPrice" className="text-sm">
+                    Selling price
                 </label>
                 {editMode ? (
                     <div className="relative h-11">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2">£</span>
                         <input
-                            id="price"
+                            id="sellingPrice"
                             type="text"
                             inputMode="decimal"
-                            className="h-full w-full rounded-lg border border-border bg-background pl-7 pr-3 text-xl font-semibold tabular-nums text-header"
-                            value={price}
-                            onChange={(e) => onPriceChange(e.target.value)}
+                            placeholder="Not sold separately"
+                            className="h-full w-full rounded-lg border border-border bg-background pl-7 pr-3 text-xl font-semibold tabular-nums text-header placeholder:text-base placeholder:font-normal"
+                            value={sellingPrice}
+                            onChange={(e) => onSellingPriceChange(e.target.value)}
                         />
                     </div>
-                ) : (
+                ) : isSold ? (
                     <div className={`${statValue} text-header`}>{formatGBP(priceValue)}</div>
+                ) : (
+                    <div className={`${statValue} text-base font-normal`}>Not sold</div>
                 )}
                 {error && <span className="text-danger text-sm">{error}</span>}
             </Card>
@@ -48,8 +59,10 @@ function RecipeStats({ price, cost, scale, editMode, error, onPriceChange }: Rec
             </Card>
             <Card>
                 <div className="text-sm">Margin</div>
-                <div className={`${statValue} ${margin < 0 ? "text-danger" : "text-header"}`}>
-                    {priceValue > 0 ? (
+                <div
+                    className={`${statValue} ${isSold && margin < 0 ? "text-danger" : "text-header"}`}
+                >
+                    {isSold && priceValue > 0 ? (
                         <>
                             {formatGBP(margin)}
                             <span className="ml-2 text-base font-normal text-body">

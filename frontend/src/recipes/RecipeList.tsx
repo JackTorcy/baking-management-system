@@ -15,11 +15,21 @@ import { Link } from "react-router-dom";
 
 interface RecipeWithStats {
     recipe: ExistingRecipe;
-    price: number;
+    sellingPrice: number | null;
     cost: number;
-    margin: number;
-    marginPercent: number;
+    margin: number | null;
+    marginPercent: number | null;
 }
+
+// Recipes that aren't sold have no price or margin, so they go last whichever way the list is sorted
+const byNumber =
+    (pick: (r: RecipeWithStats) => number | null, direction: 1 | -1) =>
+    (a: RecipeWithStats, b: RecipeWithStats) => {
+        const x = pick(a);
+        const y = pick(b);
+        if (x === null || y === null) return Number(x === null) - Number(y === null);
+        return (x - y) * direction;
+    };
 
 const sortOptions = {
     "name-asc": {
@@ -32,21 +42,18 @@ const sortOptions = {
         compare: (a: RecipeWithStats, b: RecipeWithStats) =>
             b.recipe.name.localeCompare(a.recipe.name),
     },
-    "margin-asc": {
-        label: "Margin (lowest first)",
-        compare: (a: RecipeWithStats, b: RecipeWithStats) => a.marginPercent - b.marginPercent,
-    },
+    "margin-asc": { label: "Margin (lowest first)", compare: byNumber((r) => r.marginPercent, 1) },
     "margin-desc": {
         label: "Margin (highest first)",
-        compare: (a: RecipeWithStats, b: RecipeWithStats) => b.marginPercent - a.marginPercent,
+        compare: byNumber((r) => r.marginPercent, -1),
     },
     "price-asc": {
-        label: "Price (lowest first)",
-        compare: (a: RecipeWithStats, b: RecipeWithStats) => a.price - b.price,
+        label: "Selling price (lowest first)",
+        compare: byNumber((r) => r.sellingPrice, 1),
     },
     "price-desc": {
-        label: "Price (highest first)",
-        compare: (a: RecipeWithStats, b: RecipeWithStats) => b.price - a.price,
+        label: "Selling price (highest first)",
+        compare: byNumber((r) => r.sellingPrice, -1),
     },
 };
 
@@ -62,22 +69,23 @@ function RecipeList() {
     const [loadFailed, setLoadFailed] = useState(false);
 
     const withStats: RecipeWithStats[] = recipes.map((recipe) => {
-        const price = Number(recipe.price);
+        const sellingPrice = recipe.sellingPrice.trim() ? Number(recipe.sellingPrice) : null;
         const cost = recipeCost(recipe, recipes, ingredients, new Set([recipe.id]));
-        const margin = price - cost;
+        const margin = sellingPrice === null ? null : sellingPrice - cost;
         return {
             recipe,
-            price,
+            sellingPrice,
             cost,
             margin,
-            marginPercent: price > 0 ? (margin / price) * 100 : 0,
+            marginPercent: sellingPrice && margin !== null ? (margin / sellingPrice) * 100 : null,
         };
     });
-    const negativeMarginCount = withStats.filter((r) => r.margin < 0).length;
+    const hasNegativeMargin = (r: RecipeWithStats) => r.margin !== null && r.margin < 0;
+    const negativeMarginCount = withStats.filter(hasNegativeMargin).length;
 
     const shownRecipes = withStats
         .filter((r) => r.recipe.name.toLowerCase().includes(search.trim().toLowerCase()))
-        .filter((r) => !onlyNegativeMargin || r.margin < 0)
+        .filter((r) => !onlyNegativeMargin || hasNegativeMargin(r))
         .sort(sortOptions[sort].compare);
 
     useEffect(() => {
@@ -188,47 +196,56 @@ function RecipeList() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
-                        {shownRecipes.map(({ recipe: r, price, cost, margin, marginPercent }) => (
-                            <Link
-                                key={r.id}
-                                to={`/recipes/${r.id}`}
-                                className="flex flex-col bg-surface border rounded-2xl p-4 border-border transition hover:border-primary focus-visible:outline-2 focus-visible:outline-primary"
-                            >
-                                <div className="text-xl font-bold text-header truncate">
-                                    {r.name}
-                                </div>
-                                <div className="mb-2 text-sm">{describeYield(r)}</div>
-                                {r.isUsedAsComponent && (
-                                    <div className="flex mb-2">
-                                        <div className="flex text-xs px-2 rounded-full text-header bg-background">
-                                            <Link2 className="w-4 h-4 mr-1" /> Used in other recipes
+                        {shownRecipes.map(
+                            ({ recipe: r, sellingPrice, cost, margin, marginPercent }) => (
+                                <Link
+                                    key={r.id}
+                                    to={`/recipes/${r.id}`}
+                                    className="flex flex-col bg-surface border rounded-2xl p-4 border-border transition hover:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                                >
+                                    <div className="text-xl font-bold text-header truncate">
+                                        {r.name}
+                                    </div>
+                                    <div className="mb-2 text-sm">{describeYield(r)}</div>
+                                    {r.isUsedAsComponent && (
+                                        <div className="flex mb-2">
+                                            <div className="flex text-xs px-2 rounded-full text-header bg-background">
+                                                <Link2 className="w-4 h-4 mr-1" /> Used in other
+                                                recipes
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                                <dl className="mt-auto grid grid-cols-3 gap-2 border-t border-border/40 pt-3">
-                                    <div>
-                                        <dt className="text-xs">Price</dt>
-                                        <dd className="font-semibold tabular-nums text-header">
-                                            {formatGBP(price)}
-                                        </dd>
-                                    </div>
-                                    <div>
-                                        <dt className="text-xs">Cost</dt>
-                                        <dd className="font-semibold tabular-nums text-header">
-                                            {formatGBP(cost)}
-                                        </dd>
-                                    </div>
-                                    <div>
-                                        <dt className="text-xs">Margin</dt>
-                                        <dd
-                                            className={`font-semibold tabular-nums ${margin < 0 ? "text-danger" : "text-header"}`}
-                                        >
-                                            {price > 0 ? `${Math.round(marginPercent)}%` : "—"}
-                                        </dd>
-                                    </div>
-                                </dl>
-                            </Link>
-                        ))}
+                                    )}
+                                    <dl className="mt-auto grid grid-cols-3 gap-2 border-t border-border/40 pt-3">
+                                        <div>
+                                            <dt className="text-xs">Selling price</dt>
+                                            {sellingPrice === null ? (
+                                                <dd>Not sold</dd>
+                                            ) : (
+                                                <dd className="font-semibold tabular-nums text-header">
+                                                    {formatGBP(sellingPrice)}
+                                                </dd>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <dt className="text-xs">Cost</dt>
+                                            <dd className="font-semibold tabular-nums text-header">
+                                                {formatGBP(cost)}
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-xs">Margin</dt>
+                                            <dd
+                                                className={`font-semibold tabular-nums ${margin !== null && margin < 0 ? "text-danger" : "text-header"}`}
+                                            >
+                                                {marginPercent === null
+                                                    ? "—"
+                                                    : `${Math.round(marginPercent)}%`}
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                </Link>
+                            ),
+                        )}
                     </div>
                 )}
             </div>

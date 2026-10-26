@@ -46,7 +46,7 @@ function RecipeDetails() {
     const [loadFailed, setLoadFailed] = useState(false);
     const [recipe, setRecipe] = useState<NewRecipe>({
         name: "",
-        price: "",
+        sellingPrice: "",
         description: "",
         yieldQuantity: "1",
         yieldUnit: "item",
@@ -132,14 +132,15 @@ function RecipeDetails() {
             newErrors.name = "Name is required";
         }
 
-        if (!recipe.price.trim()) {
-            newErrors.price = "Price is required";
-        } else if (isNaN(Number(recipe.price)) || recipe.price.endsWith(".")) {
-            newErrors.price = "Price must be a number";
-        } else if (Number(recipe.price) <= 0) {
-            newErrors.price = "Price must be greater than 0";
-        } else if (recipe.price && !/^\d*\.?\d{0,2}$/.test(recipe.price)) {
-            newErrors.price = "Price must not have more than 2 decimal places";
+        const sellingPrice = recipe.sellingPrice.trim();
+        if (sellingPrice) {
+            if (isNaN(Number(sellingPrice)) || sellingPrice.endsWith(".")) {
+                newErrors.sellingPrice = "Selling price must be a number";
+            } else if (Number(sellingPrice) <= 0) {
+                newErrors.sellingPrice = "Selling price must be greater than 0";
+            } else if (!/^\d*\.?\d{0,2}$/.test(sellingPrice)) {
+                newErrors.sellingPrice = "Selling price must not have more than 2 decimal places";
+            }
         }
 
         if (!recipe.description.trim()) {
@@ -424,12 +425,12 @@ function RecipeDetails() {
                 )}
 
                 <RecipeStats
-                    price={recipe.price}
+                    sellingPrice={recipe.sellingPrice}
                     cost={cost}
                     scale={scale}
                     editMode={editMode}
-                    error={errors.price}
-                    onPriceChange={(price) => updateRecipe({ price })}
+                    error={errors.sellingPrice}
+                    onSellingPriceChange={(sellingPrice) => updateRecipe({ sellingPrice })}
                 />
 
                 {/* Overview (serves, prep, cook times) */}

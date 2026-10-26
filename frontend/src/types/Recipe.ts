@@ -28,7 +28,8 @@ export interface RecipeYield {
 
 export interface NewRecipe extends RecipeYield {
     name: string;
-    price: string;
+    // Empty when the recipe isn't sold on its own
+    sellingPrice: string;
     description: string;
     ingredients: RecipeIngredient[];
     components: RecipeComponent[];
@@ -72,8 +73,16 @@ interface RecipeStepResponse {
 
 export interface RecipeResponse extends Omit<
     ExistingRecipe,
-    "yieldQuantity" | "tinSize" | "tinWidth" | "tinUnit" | "ingredients" | "components" | "steps"
+    | "sellingPrice"
+    | "yieldQuantity"
+    | "tinSize"
+    | "tinWidth"
+    | "tinUnit"
+    | "ingredients"
+    | "components"
+    | "steps"
 > {
+    sellingPrice: string | null;
     yieldQuantity: number;
     tinSize: number | null;
     tinWidth: number | null;
@@ -93,6 +102,7 @@ export const newStep = (): RecipeStep => ({
 
 export const toFormRecipe = (data: RecipeResponse): ExistingRecipe => ({
     ...data,
+    sellingPrice: data.sellingPrice ?? "",
     yieldQuantity: String(data.yieldQuantity),
     tinSize: data.tinSize == null ? "" : String(data.tinSize),
     tinWidth: data.tinWidth == null ? "" : String(data.tinWidth),
@@ -109,7 +119,7 @@ export const toFormRecipe = (data: RecipeResponse): ExistingRecipe => ({
 
 export const toSaveRecipe = (recipe: NewRecipe) => ({
     name: recipe.name,
-    price: recipe.price,
+    sellingPrice: recipe.sellingPrice.trim() || null,
     description: recipe.description,
     yieldQuantity: Number(recipe.yieldQuantity),
     yieldUnit: recipe.yieldUnit,

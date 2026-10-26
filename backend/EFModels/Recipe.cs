@@ -5,7 +5,7 @@ public class Recipe : IBakeryOwned
 {
     public int Id { get; set; }
     public string Name { get; set; } = "";
-    public decimal Price { get; set; }
+    public decimal? SellingPrice { get; set; }
     public string Description { get; set; } = "";
     public decimal YieldQuantity { get; set; } = 1;
     public IngredientUnit YieldUnit { get; set; } = IngredientUnit.item;

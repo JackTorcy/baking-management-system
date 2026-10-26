@@ -6,12 +6,12 @@ public class SaveRecipe : IValidatableObject
     [MaxLength(100)]
     public string Name { get; set; } = "";
 
-    [Required]
+    // Empty means the recipe isn't sold on its own, e.g. a biscuit base only used as a component
     [RegularExpression(
         @"^\d*\.?\d{1,2}$",
-        ErrorMessage = "Price must be a number with up to 2 decimal places"
+        ErrorMessage = "Selling price must be a number with up to 2 decimal places"
     )]
-    public string Price { get; set; } = "";
+    public string? SellingPrice { get; set; }
 
     [Required]
     [MaxLength(100)]
@@ -44,6 +44,12 @@ public class SaveRecipe : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        if (decimal.TryParse(SellingPrice, out var sellingPrice) && sellingPrice <= 0)
+            yield return new ValidationResult(
+                "Selling price must be greater than 0",
+                [nameof(SellingPrice)]
+            );
+
         if (Ingredients.GroupBy(i => i.IngredientId).Any(g => g.Count() > 1))
             yield return new ValidationResult(
                 "Each ingredient can only be added once",
