@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, Link2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { formatUnitPrice, pricePer, unitLabel, type ExistingIngredient } from "../types/Ingredient";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
@@ -10,10 +10,14 @@ import UnitBadge from "../components/ui/UnitBadge";
 
 function IngredientsList() {
     const [ingredients, setIngredients] = useState<ExistingIngredient[]>([]);
+    const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(false);
     const [loadFailed, setLoadFailed] = useState(false);
-    const navigate = useNavigate();
     const { user } = useAuth();
+
+    const shownIngredients = ingredients.filter((i) =>
+        i.name.toLowerCase().includes(search.trim().toLowerCase()),
+    );
 
     useEffect(() => {
         const loadIngredients = async () => {
@@ -33,10 +37,6 @@ function IngredientsList() {
         loadIngredients();
     }, []);
 
-    const handleEdit = (id: number) => {
-        navigate(`/ingredients/${id}`);
-    };
-
     if (loadFailed) return <div>Failed to Load</div>;
 
     return (
@@ -48,27 +48,22 @@ function IngredientsList() {
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <input
-                            type="text"
+                            type="search"
+                            aria-label="Search ingredients"
                             className="border rounded-2xl border-border bg-surface w-full pl-10 pr-3 py-2"
                             placeholder="Search..."
-                            // value={}
-                            // onChange={(e) =>
-                            //     setIngredient((prev) => ({
-                            //         ...prev,
-                            //         price: e.target.value,
-                            //     }))
-                            //}
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
 
-                    <Link to="/ingredients/new" className="shrink-0">
-                        <button
-                            type="button"
-                            className="flex items-center gap-1 py-2 px-3 border border-border rounded-2xl text-header bg-primary hover:bg-primary-dark"
-                        >
-                            <Plus className="h-5 w-5" />
-                            <span className="hidden md:inline">Add New Ingredient</span>
-                        </button>
+                    <Link
+                        to="/ingredients/new"
+                        aria-label="Add new ingredient"
+                        className="shrink-0 flex items-center gap-1 py-2 px-3 border border-border rounded-2xl text-header bg-primary hover:bg-primary-dark"
+                    >
+                        <Plus className="h-5 w-5" />
+                        <span className="hidden md:inline">Add New Ingredient</span>
                     </Link>
                 </div>
             </div>
@@ -87,12 +82,16 @@ function IngredientsList() {
                                 Welcome, {user?.bakeryName}! Get started by adding your first
                                 ingredient.
                             </div>
+                        ) : shownIngredients.length === 0 ? (
+                            <div role="status" className="py-12 text-center">
+                                No ingredients match “{search.trim()}”.
+                            </div>
                         ) : (
                             <div className="grid sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
-                                {ingredients.map((i) => (
-                                    <div
-                                        onClick={() => handleEdit(i.id)}
-                                        className="bg-surface border rounded-2xl p-4 border-border cursor-pointer"
+                                {shownIngredients.map((i) => (
+                                    <Link
+                                        to={`/ingredients/${i.id}`}
+                                        className="block bg-surface border rounded-2xl p-4 border-border transition hover:border-primary focus-visible:outline-2 focus-visible:outline-primary"
                                         key={i.id}
                                     >
                                         <div className="flex flex-col">
@@ -124,7 +123,7 @@ function IngredientsList() {
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </Link>
                                 ))}
                             </div>
                         )}
