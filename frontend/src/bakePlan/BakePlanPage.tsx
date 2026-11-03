@@ -1,6 +1,6 @@
 import Placeholder from "../components/ui/Placeholder";
 
-function BakePlan() {
+function BakePlanPage() {
     return (
         <>
             <Placeholder page="Bake plan" />
@@ -8,4 +8,4 @@ function BakePlan() {
     );
 }
 
-export default BakePlan;
+export default BakePlanPage;

@@ -3,14 +3,9 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import SubTitle from "../components/ui/SubTitle";
 import type { ExistingIngredient } from "../types/Ingredient";
-import {
-    amountLabel,
-    amountLeft,
-    newStep,
-    type ExistingRecipe,
-    type NewRecipe,
-    type RecipeStep,
-} from "../types/Recipe";
+import type { ExistingRecipe, NewRecipe, RecipeStep } from "../types/Recipe";
+import { amountLeft, newStep } from "./lib/form";
+import { amountLabel } from "./lib/format";
 import RecipeStepRow from "./RecipeStepRow";
 
 interface RecipeMethodCardProps {

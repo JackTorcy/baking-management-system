@@ -1,12 +1,7 @@
 import { ChevronDown, ChevronUp, Plus, Trash, X } from "lucide-react";
 import { unitLabel, type ExistingIngredient, type IngredientUnit } from "../types/Ingredient";
-import {
-    amountLabel,
-    yieldUnitLabel,
-    type ExistingRecipe,
-    type NewRecipe,
-    type RecipeStep,
-} from "../types/Recipe";
+import type { ExistingRecipe, NewRecipe, RecipeStep } from "../types/Recipe";
+import { amountLabel, yieldUnitLabel } from "./lib/format";
 import AmountInput from "./AmountInput";
 
 interface StepAmountProps {

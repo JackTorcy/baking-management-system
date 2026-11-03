@@ -1,19 +1,19 @@
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
-import RecipeList from "./recipes/RecipeList.tsx";
-import IngredientsList from "./ingredients/IngredientsList.tsx";
-import IngredientDetails from "./ingredients/IngredientDetails.tsx";
+import RecipeListPage from "./recipes/RecipeListPage.tsx";
+import IngredientsListPage from "./ingredients/IngredientsListPage.tsx";
+import IngredientDetailsPage from "./ingredients/IngredientDetailsPage.tsx";
 import BottomNav from "./components/nav/BottomNav.tsx";
-import RecipeDetails from "./recipes/RecipeDetails.tsx";
-import Login from "./auth/Login.tsx";
-import Register from "./auth/Register.tsx";
+import RecipeDetailsPage from "./recipes/RecipeDetailsPage.tsx";
+import LoginPage from "./auth/LoginPage.tsx";
+import RegisterPage from "./auth/RegisterPage.tsx";
 import { useAuth } from "./auth/AuthContext.ts";
-import Orders from "./orders/Orders.tsx";
-import BakePlan from "./bakePlan/BakePlan.tsx";
-import Settings from "./settings/Settings.tsx";
+import OrdersPage from "./orders/OrdersPage.tsx";
+import BakePlanPage from "./bakePlan/BakePlanPage.tsx";
+import SettingsPage from "./settings/SettingsPage.tsx";
 import LeftNav from "./components/nav/LeftNav.tsx";
-import Account from "./auth/Account.tsx";
-import More from "./more/More.tsx";
-import Sessions from "./sessions/Sessions.tsx";
+import AccountPage from "./auth/AccountPage.tsx";
+import MorePage from "./more/MorePage.tsx";
+import SessionsPage from "./sessions/SessionsPage.tsx";
 
 function AppLayout() {
     const { user, loading } = useAuth();
@@ -40,24 +40,24 @@ function App() {
     return (
         <Routes>
             <Route path="/" element={<Navigate to="/recipes" replace />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
             <Route element={<AppLayout />}>
-                <Route path="/recipes" element={<RecipeList />} />
-                <Route path="/recipes/new" element={<RecipeDetails />} />
-                <Route path="/recipes/:id" element={<RecipeDetails />} />
+                <Route path="/recipes" element={<RecipeListPage />} />
+                <Route path="/recipes/new" element={<RecipeDetailsPage />} />
+                <Route path="/recipes/:id" element={<RecipeDetailsPage />} />
 
-                <Route path="/ingredients" element={<IngredientsList />} />
-                <Route path="/ingredients/new" element={<IngredientDetails />} />
-                <Route path="/ingredients/:id" element={<IngredientDetails />} />
+                <Route path="/ingredients" element={<IngredientsListPage />} />
+                <Route path="/ingredients/new" element={<IngredientDetailsPage />} />
+                <Route path="/ingredients/:id" element={<IngredientDetailsPage />} />
 
-                <Route path="/sessions" element={<Sessions />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/bakeplan" element={<BakePlan />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/account" element={<Account />} />
-                <Route path="/more" element={<More />} />
+                <Route path="/sessions" element={<SessionsPage />} />
+                <Route path="/orders" element={<OrdersPage />} />
+                <Route path="/bakeplan" element={<BakePlanPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/account" element={<AccountPage />} />
+                <Route path="/more" element={<MorePage />} />
             </Route>
         </Routes>
     );

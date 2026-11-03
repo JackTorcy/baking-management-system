@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { Plus, Search, Link2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { formatUnitPrice, pricePer, unitLabel, type ExistingIngredient } from "../types/Ingredient";
+import { unitLabel, type ExistingIngredient } from "../types/Ingredient";
+import { formatUnitPrice, pricePer } from "./lib/price";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import PageTitle from "../components/ui/PageTitle";
 import { useAuth } from "../auth/AuthContext";
 import UnitBadge from "../components/ui/UnitBadge";
 
-function IngredientsList() {
+function IngredientsListPage() {
     const [ingredients, setIngredients] = useState<ExistingIngredient[]>([]);
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(false);
@@ -134,4 +135,4 @@ function IngredientsList() {
     );
 }
 
-export default IngredientsList;
+export default IngredientsListPage;

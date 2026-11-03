@@ -5,7 +5,7 @@ import LoadingSpinner from "../components/ui/LoadingSpinner";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
-function Register() {
+function RegisterPage() {
     const [bakeryName, setBakeryName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -173,4 +173,4 @@ function Register() {
     );
 }
 
-export default Register;
+export default RegisterPage;

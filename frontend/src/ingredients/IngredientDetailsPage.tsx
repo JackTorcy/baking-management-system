@@ -1,10 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import {
     baseUnit,
-    formatUnitPrice,
     ingredientUnits,
-    maxUnitPrice,
-    pricePer,
     unitKind,
     unitLabel,
     unitsOfKind,
@@ -21,17 +18,17 @@ import ErrorList from "../components/ui/ErrorList";
 import { apiErrorMessages, networkErrorMessage } from "../api/apiErrors";
 import UsedInRecipes from "../recipes/UsedInRecipes";
 import CostChangeList from "../recipes/CostChangeList";
+import type { ExistingRecipe, RecipeResponse } from "../types/Recipe";
+import { toFormRecipe } from "../recipes/lib/form";
 import {
     costChanges,
     recipesUsingIngredient,
-    toFormRecipe,
     withParentRecipes,
     type CostChange,
-    type ExistingRecipe,
-    type RecipeResponse,
-} from "../types/Recipe";
+} from "../recipes/lib/math";
+import { formatUnitPrice, maxUnitPrice, pricePer } from "./lib/price";
 
-function IngredientDetails() {
+function IngredientDetailsPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const isEditing = id !== undefined;
@@ -376,4 +373,4 @@ function IngredientDetails() {
     );
 }
 
-export default IngredientDetails;
+export default IngredientDetailsPage;

@@ -12,6 +12,7 @@ public class RecipeResponse
     public decimal? TinWidth { get; set; }
     public LengthUnit? TinUnit { get; set; }
     public bool IsUsedAsComponent { get; set; }
+    public decimal Cost { get; set; }
     public List<RecipeIngredientDto> Ingredients { get; set; } = new();
     public List<RecipeComponentDto> Components { get; set; } = new();
     public List<RecipeStepDto> Steps { get; set; } = new();

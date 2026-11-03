@@ -1,27 +1,24 @@
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import { useNavigate, useParams } from "react-router-dom";
-import SubTitle from "../components/ui/SubTitle";
+import type {
+    ExistingRecipe,
+    NewRecipe,
+    RecipeResponse,
+    RecipeYield,
+} from "../types/Recipe";
+import { amountLeft, toFormRecipe, toSaveRecipe } from "./lib/form";
+import { describeYield } from "./lib/format";
 import {
-    amountLeft,
     costChanges,
-    describeYield,
-    formatAmount,
     recipeCost,
     recipesUsingComponent,
     scaleFactor,
-    toFormRecipe,
-    toSaveRecipe,
     withParentRecipes,
     type CostChange,
-    type ExistingRecipe,
-    type NewRecipe,
-    type RecipeIngredient,
-    type RecipeResponse,
-    type RecipeYield,
-} from "../types/Recipe";
-import { baseUnit, unitKind, type ExistingIngredient, type UnitKind } from "../types/Ingredient";
-import { Edit, Trash, X } from "lucide-react";
+} from "./lib/math";
+import { unitKind, type ExistingIngredient, type UnitKind } from "../types/Ingredient";
+import { Edit, Trash } from "lucide-react";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import PageTitleWithBack from "../components/ui/PageTitleWithBack";
@@ -33,11 +30,11 @@ import RecipeMethodCard from "./RecipeMethodCard";
 import RecipeYieldFields from "./RecipeYieldFields";
 import RecipeScaleControl from "./RecipeScaleControl";
 import RecipeStats from "./RecipeStats";
-import AmountInput from "./AmountInput";
+import RecipeIngredientsCard from "./RecipeIngredientsCard";
 import UsedInRecipes from "./UsedInRecipes";
 import CostChangeList from "./CostChangeList";
 
-function RecipeDetails() {
+function RecipeDetailsPage() {
     const { id } = useParams();
     const isNew = id === undefined; //New (no id) vs Existing (id)
     const buttonLabel = isNew ? "Add Recipe" : "Edit Recipe";
@@ -74,7 +71,12 @@ function RecipeDetails() {
 
     const recipeId = isNew ? undefined : Number(id);
     const scale = !editMode && scaleTo ? scaleFactor(recipe, scaleTo) : 1;
-    const cost = recipeCost(recipe, allRecipes, allIngredients, new Set(isNew ? [] : [recipeId!]));
+    const savedRecipe = allRecipes.find((r) => r.id === recipeId);
+    // Unsaved edits only exist in the browser, so it previews their cost; saved recipes show the server's figure
+    const cost =
+        editMode || !savedRecipe
+            ? recipeCost(recipe, allRecipes, allIngredients, new Set(isNew ? [] : [recipeId!]))
+            : savedRecipe.cost;
     const isUsedAsComponent = lockedYieldKind !== null;
     const parentRecipes = isNew ? [] : recipesUsingComponent(recipeId!, allRecipes);
     const hasUnsavedChanges = JSON.stringify(recipe) !== JSON.stringify(recipeSnapshot);
@@ -288,42 +290,6 @@ function RecipeDetails() {
         setDialog("delete");
     };
 
-    const addIngredientToRecipe = (id: number) => {
-        const ingredient = allIngredients.find((i) => i.id === id);
-        if (!ingredient || recipe.ingredients.some((ri) => ri.ingredientId === id)) return;
-        setRecipe({
-            ...recipe,
-            ingredients: [
-                ...recipe.ingredients,
-                {
-                    ingredientId: id,
-                    quantity: "",
-                    unit: baseUnit[unitKind[ingredient.ingredientUnit]],
-                },
-            ],
-        });
-    };
-
-    const removeIngredientFromRecipe = (id: number) => {
-        setRecipe((prev) => ({
-            ...prev,
-            ingredients: prev.ingredients.filter((ri) => ri.ingredientId !== id),
-            steps: prev.steps.map((s) => ({
-                ...s,
-                ingredients: s.ingredients.filter((si) => si.ingredientId !== id),
-            })),
-        }));
-    };
-
-    const updateIngredient = (id: number, change: Partial<RecipeIngredient>) => {
-        setRecipe((prev) => ({
-            ...prev,
-            ingredients: prev.ingredients.map((ri) =>
-                ri.ingredientId === id ? { ...ri, ...change } : ri,
-            ),
-        }));
-    };
-
     const startEditing = () => {
         setScaleTo(null);
         setRecipeSnapshot(recipe);
@@ -456,109 +422,25 @@ function RecipeDetails() {
                 </div>
             </div> */}
 
-                <Card className="flex flex-col max-h-80 mb-4">
-                    <SubTitle title="Ingredients"></SubTitle>
-                    {errors.ingredients && (
-                        <span className="text-danger text-sm">{errors.ingredients}</span>
-                    )}
-                    <div className="flex-1 overflow-y-auto">
-                        {recipe.ingredients.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-2 gap-x-4 mb-3">
-                                {recipe.ingredients.map((ri) => {
-                                    const ingredient = allIngredients.find(
-                                        (i) => i.id === ri.ingredientId,
-                                    );
-                                    return (
-                                        <div
-                                            key={ri.ingredientId}
-                                            className="flex items-center gap-2"
-                                        >
-                                            {editMode ? (
-                                                // <span>
-                                                //     <input
-                                                //         onChange={(e) =>
-                                                //             updateIngredientQuantity(
-                                                //                 Number(ri.ingredientId),
-                                                //                 Number(e.target.value),
-                                                //             )
-                                                //         }
-                                                //         className="border border-border rounded-2xl w-14 px-2"
-                                                //         value={ri.quantity}
-                                                //     />
-                                                //     &nbsp;
-                                                //     {unitLabel[ingredient?.ingredientUnit ?? ""] ??
-                                                //         ingredient?.ingredientUnit}
-                                                // </span>
-                                                <AmountInput
-                                                    name={ingredient?.name ?? ""}
-                                                    quantity={ri.quantity}
-                                                    unit={ri.unit}
-                                                    onQuantityChange={(quantity) =>
-                                                        updateIngredient(ri.ingredientId, {
-                                                            quantity,
-                                                        })
-                                                    }
-                                                    onUnitChange={(unit) =>
-                                                        updateIngredient(ri.ingredientId, { unit })
-                                                    }
-                                                />
-                                            ) : (
-                                                <span className="min-w-16 shrink-0 whitespace-nowrap text-right tabular-nums font-medium text-header">
-                                                    {formatAmount(
-                                                        Number(ri.quantity) * scale,
-                                                        ri.unit,
-                                                    )}
-                                                </span>
-                                            )}
-
-                                            <span className="truncate flex-1 min-w-0">
-                                                {ingredient?.name}
-                                            </span>
-                                            {editMode && (
-                                                <button
-                                                    type="button"
-                                                    aria-label={`Remove ${ingredient?.name}`}
-                                                    className="shrink-0 rounded-full p-1 text-body/60 hover:bg-danger/10 hover:text-danger"
-                                                    onClick={() =>
-                                                        removeIngredientFromRecipe(ri.ingredientId)
-                                                    }
-                                                >
-                                                    <X className="h-4 w-4" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <div className="mb-3 text-center">
-                                No ingredients added yet. Add ingredients to get started!
-                            </div>
-                        )}
-                    </div>
-
-                    {/* dropdown — fixed at the bottom of the panel, doesn't move */}
-                    <div hidden={!editMode} className="shrink-0 border-t pt-3 border-border">
-                        <select
-                            onChange={(e) => addIngredientToRecipe(Number(e.target.value))}
-                            className="w-full border border-border rounded-2xl px-3 py-2"
-                        >
-                            <option key="" value="">
-                                Select
-                            </option>
-                            {allIngredients
-                                .filter(
-                                    (i) =>
-                                        !recipe.ingredients.some((ri) => ri.ingredientId === i.id),
-                                )
-                                .map((i) => (
-                                    <option key={i.id} value={i.id}>
-                                        {i.name}
-                                    </option>
-                                ))}
-                        </select>
-                    </div>
-                </Card>
+                <RecipeIngredientsCard
+                    ingredients={recipe.ingredients}
+                    allIngredients={allIngredients}
+                    editMode={editMode}
+                    scale={scale}
+                    error={errors.ingredients}
+                    onChange={(ingredients) =>
+                        setRecipe((prev) => ({
+                            ...prev,
+                            ingredients,
+                            steps: prev.steps.map((s) => ({
+                                ...s,
+                                ingredients: s.ingredients.filter((si) =>
+                                    ingredients.some((ri) => ri.ingredientId === si.ingredientId),
+                                ),
+                            })),
+                        }))
+                    }
+                />
 
                 <RecipeComponentsCard
                     components={recipe.components}
@@ -688,4 +570,4 @@ function RecipeDetails() {
     );
 }
 
-export default RecipeDetails;
+export default RecipeDetailsPage;

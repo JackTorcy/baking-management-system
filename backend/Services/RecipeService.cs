@@ -45,7 +45,10 @@ public class RecipeService : IRecipeService
             .ToListAsync();
         var usedSet = usedAsComponentIds.ToHashSet();
 
-        return recipes.Select(r => ToResponse(r, usedSet.Contains(r.Id))).ToList();
+        var costs = await CostsAsync();
+        return recipes
+            .Select(r => ToResponse(r, usedSet.Contains(r.Id), costs.GetValueOrDefault(r.Id)))
+            .ToList();
     }
 
     public async Task<RecipeResponse?> GetAsync(int id)
@@ -55,7 +58,11 @@ public class RecipeService : IRecipeService
         if (recipe == null)
             return null;
 
-        return ToResponse(recipe, await IsUsedAsComponentAsync(id));
+        return ToResponse(
+            recipe,
+            await IsUsedAsComponentAsync(id),
+            (await CostsAsync()).GetValueOrDefault(id)
+        );
     }
 
     public async Task<RecipeResponse> CreateAsync(SaveRecipe dto)
@@ -90,7 +97,7 @@ public class RecipeService : IRecipeService
 
         _db.Recipes.Add(recipe);
         await _db.SaveChangesAsync();
-        return ToResponse(recipe, false);
+        return ToResponse(recipe, false, (await CostsAsync()).GetValueOrDefault(recipe.Id));
     }
 
     public async Task<RecipeResponse?> UpdateAsync(int id, SaveRecipe dto)
@@ -157,7 +164,11 @@ public class RecipeService : IRecipeService
         SetSteps(recipe, dto);
 
         await _db.SaveChangesAsync();
-        return ToResponse(recipe, await IsUsedAsComponentAsync(id));
+        return ToResponse(
+            recipe,
+            await IsUsedAsComponentAsync(id),
+            (await CostsAsync()).GetValueOrDefault(id)
+        );
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -227,7 +238,20 @@ public class RecipeService : IRecipeService
         }
     }
 
-    private static RecipeResponse ToResponse(Recipe r, bool isUsedAsComponent) =>
+    // shortcut: loads every recipe in the bakery to cost any one of them, upgrade to loading just the component tree if bakeries get large
+    private async Task<Dictionary<int, decimal>> CostsAsync()
+    {
+        var recipes = await _db
+            .Recipes.AsNoTracking()
+            .Include(r => r.Ingredients)
+                .ThenInclude(ri => ri.Ingredient)
+            .Include(r => r.Components)
+            .AsSplitQuery()
+            .ToListAsync();
+        return RecipeCosting.CostAll(recipes);
+    }
+
+    private static RecipeResponse ToResponse(Recipe r, bool isUsedAsComponent, decimal cost) =>
         new()
         {
             Id = r.Id,
@@ -242,6 +266,7 @@ public class RecipeService : IRecipeService
             TinWidth = r.TinWidth,
             TinUnit = r.TinUnit,
             IsUsedAsComponent = isUsedAsComponent,
+            Cost = cost,
             Ingredients = r
                 .Ingredients.Select(i => new RecipeIngredientDto
                 {

@@ -1,5 +1,5 @@
 import { unitKind, unitLabel, unitsOfKind, type IngredientUnit } from "../types/Ingredient";
-import { decimalPattern } from "../types/Recipe";
+import { decimalPattern } from "./lib/form";
 
 interface AmountInputProps {
     name: string;

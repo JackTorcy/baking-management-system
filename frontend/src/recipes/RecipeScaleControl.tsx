@@ -2,15 +2,9 @@ import type { ChangeEvent } from "react";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { unitKind, unitLabel, unitsOfKind, type IngredientUnit } from "../types/Ingredient";
-import {
-    decimalPattern,
-    formatQuantity,
-    lengthUnitLabel,
-    tinShapes,
-    yieldUnitLabel,
-    type RecipeYield,
-    type TinShape,
-} from "../types/Recipe";
+import { lengthUnitLabel, tinShapes, type RecipeYield, type TinShape } from "../types/Recipe";
+import { decimalPattern } from "./lib/form";
+import { formatQuantity, yieldUnitLabel } from "./lib/format";
 
 interface RecipeScaleControlProps {
     recipe: RecipeYield;

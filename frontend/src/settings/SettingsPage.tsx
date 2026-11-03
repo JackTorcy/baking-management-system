@@ -1,6 +1,6 @@
 import Placeholder from "../components/ui/Placeholder";
 
-function Settings() {
+function SettingsPage() {
     return (
         <>
             <Placeholder page="Settings" />
@@ -8,4 +8,4 @@ function Settings() {
     );
 }
 
-export default Settings;
+export default SettingsPage;

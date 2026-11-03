@@ -5,7 +5,7 @@ import LoadingSpinner from "../components/ui/LoadingSpinner";
 import AuthLayout from "./AuthLayout";
 import { useAuth } from "./AuthContext";
 
-function Login() {
+function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -149,4 +149,4 @@ function Login() {
     );
 }
 
-export default Login;
+export default LoginPage;

@@ -5,16 +5,9 @@ import Card from "../components/ui/Card";
 import SubTitle from "../components/ui/SubTitle";
 import AmountInput from "./AmountInput";
 import { unitLabel, type ExistingIngredient, type IngredientUnit } from "../types/Ingredient";
-import {
-    amountLabel,
-    containsRecipe,
-    formatGBP,
-    recipeCost,
-    yieldFraction,
-    yieldUnitLabel,
-    type ExistingRecipe,
-    type RecipeComponent,
-} from "../types/Recipe";
+import type { ExistingRecipe, RecipeComponent } from "../types/Recipe";
+import { amountLabel, formatGBP, yieldUnitLabel } from "./lib/format";
+import { containsRecipe, yieldFraction } from "./lib/math";
 
 interface RecipeComponentsCardProps {
     components: RecipeComponent[];
@@ -76,9 +69,7 @@ function RecipeComponentsCard({
                         const component = recipes.find((r) => r.id === rc.componentId);
                         if (!component) return null;
                         const fraction = yieldFraction(component, rc.quantity, rc.unit) * scale;
-                        const cost =
-                            recipeCost(component, recipes, ingredients, new Set([component.id])) *
-                            fraction;
+                        const cost = component.cost * fraction;
                         const unitName = (unit: IngredientUnit) =>
                             unit === "item" ? yieldUnitLabel(component) : unitLabel[unit];
                         const isExpanded = expanded.includes(rc.componentId);

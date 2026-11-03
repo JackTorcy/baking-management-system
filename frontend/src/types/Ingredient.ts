@@ -42,20 +42,6 @@ export const baseUnit: Record<UnitKind, IngredientUnit> = {
 
 export const unitsOfKind = (kind: UnitKind) => ingredientUnits.filter((u) => unitKind[u] === kind);
 
-export const maxUnitPrice = 999;
-
-export const pricePer = (ingredient: NewIngredient, unit: IngredientUnit) =>
-    (Number(ingredient.price) * unitFactor[unit]) /
-    (Number(ingredient.packSize) * unitFactor[ingredient.ingredientUnit]);
-
-export const formatUnitPrice = (value: number) =>
-    value.toLocaleString("en-GB", {
-        style: "currency",
-        currency: "GBP",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 4,
-    });
-
 export interface NewIngredient {
     name: string;
     price: string;

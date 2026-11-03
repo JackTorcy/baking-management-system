@@ -1,7 +1,7 @@
 import Placeholder from "../components/ui/Placeholder";
 
-function Account() {
+function AccountPage() {
     return <Placeholder page="Account" />;
 }
 
-export default Account;
+export default AccountPage;

@@ -1,6 +1,6 @@
 import Placeholder from "../components/ui/Placeholder";
 
-function Orders() {
+function OrdersPage() {
     return (
         <>
             <Placeholder page="Orders" />
@@ -8,4 +8,4 @@ function Orders() {
     );
 }
 
-export default Orders;
+export default OrdersPage;

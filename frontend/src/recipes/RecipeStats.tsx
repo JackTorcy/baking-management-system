@@ -1,5 +1,5 @@
 import Card from "../components/ui/Card";
-import { formatGBP } from "../types/Recipe";
+import { formatGBP } from "./lib/format";
 
 interface RecipeStatsProps {
     sellingPrice: string;

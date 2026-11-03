@@ -1,4 +1,5 @@
-import { formatGBP, type CostChange } from "../types/Recipe";
+import type { CostChange } from "./lib/math";
+import { formatGBP } from "./lib/format";
 
 function CostChangeList({ changes }: { changes: CostChange[] }) {
     return (

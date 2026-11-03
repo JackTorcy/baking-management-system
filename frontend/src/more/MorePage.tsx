@@ -4,7 +4,7 @@ import UserPanel from "../components/ui/UserPanel";
 import { ChevronRight, LogOut } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 
-function More() {
+function MorePage() {
     const { logout } = useAuth();
 
     const navClass =
@@ -34,4 +34,4 @@ function More() {
     );
 }
 
-export default More;
+export default MorePage;

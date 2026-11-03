@@ -1,7 +1,7 @@
 import Placeholder from "../components/ui/Placeholder";
 
-function Sessions() {
+function SessionsPage() {
     return <Placeholder page="Sessions" />;
 }
 
-export default Sessions;
+export default SessionsPage;

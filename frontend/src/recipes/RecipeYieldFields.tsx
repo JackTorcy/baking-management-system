@@ -7,13 +7,13 @@ import {
     type UnitKind,
 } from "../types/Ingredient";
 import {
-    decimalPattern,
     lengthUnitLabel,
     tinShapes,
     type LengthUnit,
     type RecipeYield,
     type TinShape,
 } from "../types/Recipe";
+import { decimalPattern } from "./lib/form";
 
 interface RecipeYieldFieldsProps {
     recipe: RecipeYield;

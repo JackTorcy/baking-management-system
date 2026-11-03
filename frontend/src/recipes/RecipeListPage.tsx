@@ -1,13 +1,7 @@
 import { useState, useEffect } from "react";
-import {
-    describeYield,
-    formatGBP,
-    recipeCost,
-    toFormRecipe,
-    type ExistingRecipe,
-    type RecipeResponse,
-} from "../types/Recipe";
-import type { ExistingIngredient } from "../types/Ingredient";
+import type { ExistingRecipe, RecipeResponse } from "../types/Recipe";
+import { toFormRecipe } from "./lib/form";
+import { describeYield, formatGBP } from "./lib/format";
 import PageTitle from "../components/ui/PageTitle";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import { Link2, Plus, Search, TriangleAlert, X } from "lucide-react";
@@ -59,9 +53,8 @@ const sortOptions = {
 
 type SortKey = keyof typeof sortOptions;
 
-function RecipeList() {
+function RecipeListPage() {
     const [recipes, setRecipes] = useState<ExistingRecipe[]>([]);
-    const [ingredients, setIngredients] = useState<ExistingIngredient[]>([]);
     const [search, setSearch] = useState("");
     const [sort, setSort] = useState<SortKey>("name-asc");
     const [onlyNegativeMargin, setOnlyNegativeMargin] = useState(false);
@@ -70,7 +63,7 @@ function RecipeList() {
 
     const withStats: RecipeWithStats[] = recipes.map((recipe) => {
         const sellingPrice = recipe.sellingPrice.trim() ? Number(recipe.sellingPrice) : null;
-        const cost = recipeCost(recipe, recipes, ingredients, new Set([recipe.id]));
+        const cost = recipe.cost;
         const margin = sellingPrice === null ? null : sellingPrice - cost;
         return {
             recipe,
@@ -92,15 +85,10 @@ function RecipeList() {
         const loadRecipes = async () => {
             setLoading(true);
             try {
-                const [recipesRes, ingredientsRes] = await Promise.all([
-                    fetch(`${import.meta.env.VITE_API_URL}/recipes`),
-                    fetch(`${import.meta.env.VITE_API_URL}/ingredients`),
-                ]);
-                if (!recipesRes.ok) throw new Error(`load failed: ${recipesRes.status}`);
-                if (!ingredientsRes.ok) throw new Error(`load failed: ${ingredientsRes.status}`);
-                const data: RecipeResponse[] = await recipesRes.json();
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`);
+                if (!res.ok) throw new Error(`load failed: ${res.status}`);
+                const data: RecipeResponse[] = await res.json();
                 setRecipes(data.map(toFormRecipe));
-                setIngredients(await ingredientsRes.json());
             } catch (err) {
                 console.error(err);
                 setLoadFailed(true);
@@ -253,4 +241,4 @@ function RecipeList() {
     );
 }
 
-export default RecipeList;
+export default RecipeListPage;
