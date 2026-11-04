@@ -1,4 +1,10 @@
-import { unitFactor, unitLabel, type IngredientUnit } from "../../types/Ingredient";
+import {
+    baseUnit,
+    unitFactor,
+    unitKind,
+    unitLabel,
+    type IngredientUnit,
+} from "../../types/Ingredient";
 import { lengthUnitLabel, type RecipeYield } from "../../types/Recipe";
 
 export const formatGBP = (value: number) =>
@@ -13,11 +19,14 @@ const largerUnit: Partial<Record<IngredientUnit, IngredientUnit>> = {
     millilitre: "litre",
 };
 
+// formatQuantity's precision assumes base units, so convert to g/ml before picking the display unit
 export const formatAmount = (quantity: number, unit: IngredientUnit) => {
-    const larger = largerUnit[unit];
-    if (larger && Number(formatQuantity(quantity)) >= unitFactor[larger])
-        return `${formatQuantity(quantity / unitFactor[larger])}${unitLabel[larger]}`;
-    return `${formatQuantity(quantity)}${unitLabel[unit]}`;
+    const base = baseUnit[unitKind[unit]];
+    const baseQuantity = quantity * unitFactor[unit];
+    const larger = largerUnit[base];
+    if (larger && Number(formatQuantity(baseQuantity)) >= unitFactor[larger])
+        return `${formatQuantity(baseQuantity / unitFactor[larger])}${unitLabel[larger]}`;
+    return `${formatQuantity(baseQuantity)}${unitLabel[base]}`;
 };
 
 export const yieldUnitLabel = (recipe: RecipeYield) =>
@@ -25,7 +34,7 @@ export const yieldUnitLabel = (recipe: RecipeYield) =>
 
 export const amountLabel = (quantity: number, unit: IngredientUnit, recipe?: RecipeYield) =>
     unit === "item"
-        ? `${formatQuantity(quantity)} ${recipe ? yieldUnitLabel(recipe) : ""}`
+        ? `${formatQuantity(quantity)} ${recipe ? yieldUnitLabel(recipe) : ""}`.trim()
         : formatAmount(quantity, unit);
 
 export const describeTin = (recipe: RecipeYield) => {
