@@ -106,6 +106,14 @@ describe("amountLabel", () => {
     it("labels items correctly without label", () => {
         expect(amountLabel(5, "item")).toBe("5");
     });
+    it.each([
+        { quantity: 1, expected: "1 batch" },
+        { quantity: 1.001, expected: "1 batch" },
+        { quantity: 5, expected: "5 batches" },
+        { quantity: 0.5, expected: "0.5 batches" },
+    ])("labels $quantity of an unlabelled recipe as $expected", ({ quantity, expected }) => {
+        expect(amountLabel(quantity, "item", baseYield)).toBe(expected);
+    });
     it("labels items correctly with label", () => {
         expect(amountLabel(7.625, "item", { ...baseYield, yieldLabel: "loaf" })).toBe("7.63 loaf");
     });
@@ -169,9 +177,9 @@ describe("describeYield", () => {
     it("singular item test with label as 'loaf'", () => {
         expect(describeYield({ ...baseYield, yieldLabel: "loaf" })).toBe("Makes 1 loaf");
     });
-    it("plural item test with label as 'loaf'", () => {
-        expect(describeYield({ ...baseYield, yieldLabel: "loaf", yieldQuantity: "2" })).toBe(
-            "Makes 2 loaf",
+    it("plural item test with label as 'loaves'", () => {
+        expect(describeYield({ ...baseYield, yieldLabel: "loaves", yieldQuantity: "2" })).toBe(
+            "Makes 2 loaves",
         );
     });
 

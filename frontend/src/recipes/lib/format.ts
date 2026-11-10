@@ -29,13 +29,17 @@ export const formatAmount = (quantity: number, unit: IngredientUnit) => {
     return `${formatQuantity(baseQuantity)}${unitLabel[base]}`;
 };
 
-export const yieldUnitLabel = (recipe: RecipeYield) =>
-    recipe.yieldUnit === "item" ? recipe.yieldLabel || "batch" : unitLabel[recipe.yieldUnit];
+export const yieldUnitLabel = (recipe: RecipeYield, quantity = 1) =>
+    recipe.yieldUnit === "item"
+        ? recipe.yieldLabel || (quantity === 1 ? "batch" : "batches")
+        : unitLabel[recipe.yieldUnit];
 
-export const amountLabel = (quantity: number, unit: IngredientUnit, recipe?: RecipeYield) =>
-    unit === "item"
-        ? `${formatQuantity(quantity)} ${recipe ? yieldUnitLabel(recipe) : ""}`.trim()
-        : formatAmount(quantity, unit);
+// Pluralise on the rounded number shown, so 1.001 reads "1 batch" not "1 batches"
+export const amountLabel = (quantity: number, unit: IngredientUnit, recipe?: RecipeYield) => {
+    if (unit !== "item") return formatAmount(quantity, unit);
+    const shown = formatQuantity(quantity);
+    return `${shown} ${recipe ? yieldUnitLabel(recipe, Number(shown)) : ""}`.trim();
+};
 
 export const describeTin = (recipe: RecipeYield) => {
     const unit = lengthUnitLabel[recipe.tinUnit];

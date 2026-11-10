@@ -48,7 +48,7 @@ function RecipeScaleControl({ recipe, scaleTo, scale, onChange }: RecipeScaleCon
                     ))}
                 </select>
             ) : (
-                <span>{yieldUnitLabel(recipe)}</span>
+                <span>{yieldUnitLabel(recipe, Number(target.yieldQuantity))}</span>
             )}
             {recipe.tinShape && (
                 <>
