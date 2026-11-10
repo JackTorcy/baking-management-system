@@ -1,6 +1,7 @@
 import { pricePer } from "../../ingredients/lib/price";
 import { unitFactor, type ExistingIngredient, type IngredientUnit } from "../../types/Ingredient";
 import type { ExistingRecipe, NewRecipe, RecipeYield } from "../../types/Recipe";
+import { formatGBP } from "./format";
 
 // How much of a recipe's yield the given amount is, e.g. 300g of a recipe that makes 800g = 0.375
 export const yieldFraction = (recipe: RecipeYield, quantity: string, unit: IngredientUnit) =>
@@ -97,7 +98,8 @@ interface CostInputs {
     ingredients: ExistingIngredient[];
 }
 
-// Only recipes whose cost moves by at least a penny, so edits like renaming never warn
+// Only recipes whose displayed cost changes, so edits like renaming never warn. Compares formatted
+// strings rather than rounding because formatGBP rounds half-pennies differently to Math.round
 export const costChanges = (
     affected: ExistingRecipe[],
     before: CostInputs,
@@ -114,4 +116,4 @@ export const costChanges = (
                 new Set([recipe.id]),
             ),
         }))
-        .filter((change) => Math.abs(change.after - change.before) >= 0.005);
+        .filter((change) => formatGBP(change.after) !== formatGBP(change.before));

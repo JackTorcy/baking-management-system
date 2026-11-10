@@ -21,20 +21,14 @@ const baseYield: RecipeYield = {
 };
 
 describe("formatGBP", () => {
-    it("adds the pound sign and pads to two decimal places", () => {
-        expect(formatGBP(2.5)).toBe("£2.50");
-    });
-    it("converts negative numbers, can be negative margins", () => {
-        expect(formatGBP(-3)).toBe("-£3.00");
-    });
-    it("adds the pound sign and two decimals to a zero value", () => {
-        expect(formatGBP(0)).toBe("£0.00");
-    });
-    it("formats thousands correctly", () => {
-        expect(formatGBP(12360)).toBe("£12,360.00");
-    });
-    it("rounds to pennies", () => {
-        expect(formatGBP(2.5672)).toBe("£2.57");
+    it.each([
+        { value: 2.5, expected: "£2.50", why: "pads to two decimal places" },
+        { value: -3, expected: "-£3.00", why: "margins can be negative" },
+        { value: 0, expected: "£0.00", why: "zero still gets two decimals" },
+        { value: 12360, expected: "£12,360.00", why: "separates thousands" },
+        { value: 2.5672, expected: "£2.57", why: "rounds to pennies" },
+    ])("formats $value as $expected ($why)", ({ value, expected }) => {
+        expect(formatGBP(value)).toBe(expected);
     });
 });
 
@@ -65,36 +59,19 @@ describe("formatQuantity", () => {
 });
 
 describe("formatAmount", () => {
-    it("keeps gram as gram under 1000", () => {
-        expect(formatAmount(80, "gram")).toBe("80g");
-    });
-    it("converts gram to kilogram over 1000", () => {
-        expect(formatAmount(2620, "gram")).toBe("2.62kg");
-    });
-    it("converts gram to kilogram at 999.5", () => {
-        expect(formatAmount(999.5, "gram")).toBe("1kg");
-    });
-    it("keeps kilogram as kilogram over 1", () => {
-        expect(formatAmount(2.9, "kilogram")).toBe("2.9kg");
-    });
-    it("converts kilogram to gram under 1", () => {
-        expect(formatAmount(0.892, "kilogram")).toBe("892g");
-    });
-    it("converts kilogram to decimal gram at low quantities", () => {
-        expect(formatAmount(0.0025, "kilogram")).toBe("2.5g");
-    });
-
-    it("keeps millilitre as millilitre under 1000", () => {
-        expect(formatAmount(999, "millilitre")).toBe("999ml");
-    });
-    it("converts millilitre to litre over 1000", () => {
-        expect(formatAmount(1000, "millilitre")).toBe("1L");
-    });
-    it("keeps litre as litre over 1", () => {
-        expect(formatAmount(1.62, "litre")).toBe("1.62L");
-    });
-    it("converts litre to millilitre under 1", () => {
-        expect(formatAmount(0.205, "litre")).toBe("205ml");
+    it.each([
+        { value: 80, unit: "gram", expected: "80g" },
+        { value: 2620, unit: "gram", expected: "2.62kg" },
+        { value: 999.5, unit: "gram", expected: "1kg" },
+        { value: 2.9, unit: "kilogram", expected: "2.9kg" },
+        { value: 0.892, unit: "kilogram", expected: "892g" },
+        { value: 0.0025, unit: "kilogram", expected: "2.5g" },
+        { value: 999, unit: "millilitre", expected: "999ml" },
+        { value: 1000, unit: "millilitre", expected: "1L" },
+        { value: 1.62, unit: "litre", expected: "1.62L" },
+        { value: 0.205, unit: "litre", expected: "205ml" },
+    ] as const)("formats $value $unit as $expected", ({ value, unit, expected }) => {
+        expect(formatAmount(value, unit)).toBe(expected);
     });
 });
 
@@ -106,32 +83,24 @@ describe("yieldUnitLabel", () => {
         expect(yieldUnitLabel({ ...baseYield, yieldLabel: "loaf" })).toBe("loaf");
     });
 
-    it("returns the shortened measurement when unit is 'gram'", () => {
-        expect(yieldUnitLabel({ ...baseYield, yieldUnit: "gram" })).toBe("g");
-    });
-    it("returns the shortened measurement when unit is 'millilitre'", () => {
-        expect(yieldUnitLabel({ ...baseYield, yieldUnit: "millilitre" })).toBe("ml");
-    });
-    it("returns the shortened measurement when unit is 'kilogram'", () => {
-        expect(yieldUnitLabel({ ...baseYield, yieldUnit: "kilogram" })).toBe("kg");
-    });
-    it("returns the shortened measurement when unit is 'litre'", () => {
-        expect(yieldUnitLabel({ ...baseYield, yieldUnit: "litre" })).toBe("L");
+    it.each([
+        { yieldUnit: "gram", expected: "g" },
+        { yieldUnit: "millilitre", expected: "ml" },
+        { yieldUnit: "kilogram", expected: "kg" },
+        { yieldUnit: "litre", expected: "L" },
+    ] as const)("shortens $yieldUnit to $expected", ({ yieldUnit, expected }) => {
+        expect(yieldUnitLabel({ ...baseYield, yieldUnit })).toBe(expected);
     });
 });
 
 describe("amountLabel", () => {
-    it("labels grams correctly", () => {
-        expect(amountLabel(150, "gram")).toBe("150g");
-    });
-    it("labels kilograms correctly", () => {
-        expect(amountLabel(2.652, "kilogram")).toBe("2.65kg");
-    });
-    it("labels millilitres correctly", () => {
-        expect(amountLabel(550, "millilitre")).toBe("550ml");
-    });
-    it("labels litres correctly", () => {
-        expect(amountLabel(1.59, "litre")).toBe("1.59L");
+    it.each([
+        { value: 150, unit: "gram", expected: "150g" },
+        { value: 2.652, unit: "kilogram", expected: "2.65kg" },
+        { value: 550, unit: "millilitre", expected: "550ml" },
+        { value: 1.59, unit: "litre", expected: "1.59L" },
+    ] as const)("labels $value $unit as $expected", ({ value, unit, expected }) => {
+        expect(amountLabel(value, unit)).toBe(expected);
     });
 
     it("labels items correctly without label", () => {
