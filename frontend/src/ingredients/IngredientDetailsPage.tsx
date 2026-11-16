@@ -1,6 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
 import {
-    baseUnit,
     ingredientUnits,
     unitKind,
     unitLabel,
@@ -26,7 +25,8 @@ import {
     withParentRecipes,
     type CostChange,
 } from "../recipes/lib/math";
-import { formatUnitPrice, maxUnitPrice, pricePer } from "./lib/price";
+import { formatUnitPrice, pricePer } from "./lib/price";
+import { validateIngredient } from "./lib/validate";
 
 function IngredientDetailsPage() {
     const { id } = useParams();
@@ -56,44 +56,7 @@ function IngredientDetailsPage() {
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const validate = () => {
-        const newErrors: Record<string, string> = {};
-
-        if (!ingredient.name.trim()) {
-            newErrors.name = "Name is required";
-        }
-
-        if (!ingredient.price.trim()) {
-            newErrors.price = "Price is required";
-        } else if (isNaN(Number(ingredient.price)) || ingredient.price.endsWith(".")) {
-            newErrors.price = "Price must be a number";
-        } else if (Number(ingredient.price) <= 0) {
-            newErrors.price = "Price must be greater than 0";
-        } else if (ingredient.price && !/^\d*\.?\d{0,4}$/.test(ingredient.price)) {
-            newErrors.price = "Price must not have more than 4 decimal places";
-        }
-
-        if (!ingredient.packSize.trim()) {
-            newErrors.packSize = "Pack size is required";
-        } else if (isNaN(Number(ingredient.packSize)) || ingredient.packSize.endsWith(".")) {
-            newErrors.packSize = "Pack size must be a number";
-        } else if (Number(ingredient.packSize) <= 0) {
-            newErrors.packSize = "Pack size must be greater than 0";
-        } else if (!/^\d*\.?\d{0,4}$/.test(ingredient.packSize)) {
-            newErrors.packSize = "Pack size must not have more than 4 decimal places";
-        }
-
-        const unitPrice = pricePer(ingredient, ingredient.ingredientUnit);
-        if (!newErrors.price && !newErrors.packSize && unitPrice > maxUnitPrice) {
-            const unit = ingredient.ingredientUnit;
-            const smallerUnit = baseUnit[unitKind[unit]];
-            newErrors.price =
-                `That's ${formatUnitPrice(unitPrice)} per ${unitLabel[unit] || unit}. ` +
-                `Prices over ${formatUnitPrice(maxUnitPrice)} per unit are usually a typo` +
-                (smallerUnit !== unit
-                    ? `, or try entering it per ${unitLabel[smallerUnit]}.`
-                    : ".");
-        }
-
+        const newErrors = validateIngredient(ingredient);
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };

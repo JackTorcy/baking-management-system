@@ -2,9 +2,9 @@ import { Plus, TriangleAlert } from "lucide-react";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import SubTitle from "../components/ui/SubTitle";
-import type { ExistingIngredient } from "../types/Ingredient";
+import { unitFactor, type ExistingIngredient } from "../types/Ingredient";
 import type { ExistingRecipe, NewRecipe, RecipeStep } from "../types/Recipe";
-import { amountLeft, newStep } from "./lib/form";
+import { amountLeft, leftoverTolerance, newStep } from "./lib/form";
 import { amountLabel } from "./lib/format";
 import RecipeStepRow from "./RecipeStepRow";
 
@@ -17,9 +17,6 @@ interface RecipeMethodCardProps {
     error?: string;
     onChange: (steps: RecipeStep[]) => void;
 }
-
-// Leftovers smaller than this are float noise from unit conversion, not real unused amounts
-const leftoverTolerance = 0.001;
 
 function RecipeMethodCard({
     recipe,
@@ -54,17 +51,18 @@ function RecipeMethodCard({
         ...recipe.ingredients.map((ri) => {
             const left = ingredientLeft(ri.ingredientId);
             const name = ingredients.find((i) => i.id === ri.ingredientId)?.name ?? "";
-            return { left, label: `${amountLabel(left * scale, ri.unit)} ${name}` };
+            return { left, unit: ri.unit, label: `${amountLabel(left * scale, ri.unit)} ${name}` };
         }),
         ...recipe.components.map((rc) => {
             const left = componentLeft(rc.componentId);
             const component = recipes.find((r) => r.id === rc.componentId);
             return {
                 left,
+                unit: rc.unit,
                 label: `${amountLabel(left * scale, rc.unit, component)} ${component?.name ?? ""}`,
             };
         }),
-    ].filter((line) => line.left > leftoverTolerance);
+    ].filter((line) => line.left * unitFactor[line.unit] > leftoverTolerance);
 
     const moveStep = (index: number, offset: -1 | 1) => {
         const moved = [...steps];

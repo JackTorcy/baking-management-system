@@ -51,6 +51,10 @@ export const decimalPattern = /^\d*\.?\d*$/;
 
 type Amount = { quantity: string; unit: IngredientUnit };
 
+// In g, ml or items, not the line's unit, so kg lines get the same slack as g lines.
+// Leftovers smaller than this are float noise from unit conversion, not real amounts
+export const leftoverTolerance = 0.001;
+
 // How much of a recipe line the steps haven't used yet, in that line's unit
 export const amountLeft = (line: Amount, usedInSteps: Amount[]) =>
     Number(line.quantity) -

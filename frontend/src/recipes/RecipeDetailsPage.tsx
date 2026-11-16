@@ -7,7 +7,8 @@ import type {
     RecipeResponse,
     RecipeYield,
 } from "../types/Recipe";
-import { amountLeft, toFormRecipe, toSaveRecipe } from "./lib/form";
+import { toFormRecipe, toSaveRecipe } from "./lib/form";
+import { validateRecipe } from "./lib/validate";
 import { describeYield } from "./lib/format";
 import {
     costChanges,
@@ -131,78 +132,7 @@ function RecipeDetailsPage() {
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const validate = () => {
-        const newErrors: Record<string, string> = {};
-
-        if (!recipe.name.trim()) {
-            newErrors.name = "Name is required";
-        }
-
-        const sellingPrice = recipe.sellingPrice.trim();
-        if (sellingPrice) {
-            if (isNaN(Number(sellingPrice)) || sellingPrice.endsWith(".")) {
-                newErrors.sellingPrice = "Selling price must be a number";
-            } else if (Number(sellingPrice) <= 0) {
-                newErrors.sellingPrice = "Selling price must be greater than 0";
-            } else if (!/^\d*\.?\d{0,2}$/.test(sellingPrice)) {
-                newErrors.sellingPrice = "Selling price must not have more than 2 decimal places";
-            }
-        }
-
-        if (!recipe.description.trim()) {
-            newErrors.description = "Description is required";
-        }
-
-        if (!(Number(recipe.yieldQuantity) > 0)) {
-            newErrors.yield = "How much the recipe makes must be greater than 0";
-        } else if (
-            recipe.tinShape &&
-            (!(Number(recipe.tinSize) > 0) ||
-                (recipe.tinShape === "rectangle" && !(Number(recipe.tinWidth) > 0)))
-        ) {
-            newErrors.yield = "Tin size must be greater than 0";
-        }
-
-        if (recipe.ingredients.some((ri) => !(Number(ri.quantity) > 0)))
-            newErrors.ingredients = "Ingredient quantities must all be greater than 0";
-
-        if (recipe.components.some((rc) => !(Number(rc.quantity) > 0)))
-            newErrors.components = "Component quantities must all be greater than 0";
-
-        const overUsed = [
-            ...recipe.ingredients.map((ri) => ({
-                name: allIngredients.find((i) => i.id === ri.ingredientId)?.name,
-                left: amountLeft(
-                    ri,
-                    recipe.steps.flatMap((s) =>
-                        s.ingredients.filter((si) => si.ingredientId === ri.ingredientId),
-                    ),
-                ),
-            })),
-            ...recipe.components.map((rc) => ({
-                name: allRecipes.find((r) => r.id === rc.componentId)?.name,
-                left: amountLeft(
-                    rc,
-                    recipe.steps.flatMap((s) =>
-                        s.components.filter((sc) => sc.componentId === rc.componentId),
-                    ),
-                ),
-            })),
-        ].find((line) => line.left < -0.001);
-
-        if (recipe.steps.some((s) => !s.instruction.trim())) {
-            newErrors.steps = "Every step needs an instruction";
-        } else if (
-            recipe.steps.some(
-                (s) =>
-                    s.ingredients.some((si) => !(Number(si.quantity) > 0)) ||
-                    s.components.some((sc) => !(Number(sc.quantity) > 0)),
-            )
-        ) {
-            newErrors.steps = "Step amounts must all be greater than 0";
-        } else if (overUsed) {
-            newErrors.steps = `Steps use more ${overUsed.name} than the recipe has`;
-        }
-
+        const newErrors = validateRecipe(recipe, allIngredients, allRecipes);
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
