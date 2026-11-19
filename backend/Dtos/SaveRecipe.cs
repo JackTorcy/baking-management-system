@@ -7,9 +7,10 @@ public class SaveRecipe : IValidatableObject
     public string Name { get; set; } = "";
 
     // Empty means the recipe isn't sold on its own, e.g. a biscuit base only used as a component
+    // No [Range]: it throws when a number is too big for decimal, so the regex caps the whole digits instead
     [RegularExpression(
-        @"^\d*\.?\d{1,2}$",
-        ErrorMessage = "Selling price must be a number with up to 2 decimal places"
+        @"^(\d{1,7}(\.\d{1,2})?|\.\d{1,2})$",
+        ErrorMessage = "Selling price must be a number under 10,000,000 with up to 2 decimal places"
     )]
     public string? SellingPrice { get; set; }
 
