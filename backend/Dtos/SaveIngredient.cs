@@ -10,6 +10,7 @@ public class SaveIngredient : IValidatableObject
 
     [Required]
     [RegularExpression(@"^\d*\.?\d{1,4}$", ErrorMessage = "Price must be a number with up to 4 decimal places")]
+    [Range(typeof(decimal), "0.0001", "9999999", ErrorMessage = "Price must be greater than 0 and under £10,000,000")]
     public string Price { get; set; } = "";
 
     [Required]
