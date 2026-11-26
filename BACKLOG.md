@@ -10,7 +10,7 @@ Each acceptance criterion must be checkable by a test or by running the app. "Wo
 
 ## BMS-1: Backend integration test harness
 
-Status: ready
+Status: done
 
 Why: today's tests only cover DTO validation and pure functions, so agents can't verify services or controllers.
 
