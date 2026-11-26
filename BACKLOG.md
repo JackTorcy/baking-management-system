@@ -23,7 +23,7 @@ Acceptance criteria:
 
 ## BMS-2: Skip integration tests when no test database is configured
 
-Status: draft
+Status: ready
 
 Depends on: BMS-1 merged to master.
 
@@ -37,7 +37,7 @@ Acceptance criteria:
 
 ## BMS-3: Integration tests only run against the agents database
 
-Status: draft
+Status: ready
 
 Depends on: BMS-2. Before marking ready, the owner adds `"BMS_TEST_DATABASE": "agents"` to the `env` block in `.claude/settings.local.json`.
 
@@ -52,7 +52,7 @@ Acceptance criteria:
 
 ## BMS-4: Bakery filter on recipe child tables
 
-Status: draft
+Status: ready
 
 Depends on: BMS-1 merged to master.
 
